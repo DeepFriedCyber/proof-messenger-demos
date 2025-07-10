@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use ed25519_dalek::{Keypair, PublicKey, Signature, Signer, Verifier, SECRET_KEY_LENGTH, PUBLIC_KEY_LENGTH};
+use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer, Verifier, SECRET_KEY_LENGTH, PUBLIC_KEY_LENGTH};
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,15 +10,13 @@ pub fn main() {
     console_error_panic_hook::set_once();
 }
 
-// Console logging functions
+// A. Logging Macros (for Dev Experience)
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
-    
     #[wasm_bindgen(js_namespace = console)]
     fn warn(s: &str);
-    
     #[wasm_bindgen(js_namespace = console)]
     fn error(s: &str);
 }
@@ -66,16 +64,15 @@ pub fn get_private_key_from_keypair(keypair_bytes: &[u8]) -> Vec<u8> {
     keypair_bytes[..SECRET_KEY_LENGTH].to_vec()
 }
 
-/// Convert bytes to hex string
+// B. Hex/Bytes Helpers
 #[wasm_bindgen]
 pub fn bytes_to_hex(bytes: &[u8]) -> String {
     hex::encode(bytes)
 }
 
-/// Convert hex string to bytes
 #[wasm_bindgen]
-pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
-    hex::decode(hex).unwrap_or_default()
+pub fn hex_to_bytes(hex: &str) -> Result<Vec<u8>, JsValue> {
+    hex::decode(hex).map_err(|e| JsValue::from_str(&format!("Hex decode error: {e}")))
 }
 
 /// Sign some context data with the secret key
@@ -90,14 +87,12 @@ pub fn make_proof_wasm(privkey_bytes: &[u8], context: &[u8]) -> Vec<u8> {
 
 /// Verify a proof given pubkey, context, and proof (signature)
 #[wasm_bindgen]
-pub fn verify_proof_wasm(pubkey_bytes: &[u8], context: &[u8], proof_bytes: &[u8]) -> bool {
-    match (
-        PublicKey::from_bytes(pubkey_bytes),
-        Signature::from_bytes(proof_bytes)
-    ) {
-        (Ok(pubkey), Ok(sig)) => pubkey.verify(context, &sig).is_ok(),
-        _ => false
-    }
+pub fn verify_proof_wasm(pubkey_bytes: &[u8], context: &[u8], proof_bytes: &[u8]) -> Result<bool, JsValue> {
+    let pubkey = PublicKey::from_bytes(pubkey_bytes)
+        .map_err(|e| JsValue::from_str(&format!("PublicKey error: {e}")))?;
+    let signature = Signature::from_bytes(proof_bytes)
+        .map_err(|e| JsValue::from_str(&format!("Signature error: {e}")))?;
+    Ok(pubkey.verify(context, &signature).is_ok())
 }
 
 /// Validate invitation code format
@@ -108,11 +103,34 @@ pub fn validate_invite_code(code: &str) -> bool {
 
 /// Generate a random invitation code
 #[wasm_bindgen]
-pub fn generate_invite_code() -> String {
+pub fn generate_invite_code() -> Result<String, JsValue> {
     use rand::Rng;
     let mut rng = OsRng;
     let chars: Vec<char> = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".chars().collect();
-    (0..8).map(|_| chars[rng.gen_range(0, chars.len())]).collect()
+    if chars.is_empty() {
+        return Err(JsValue::from_str("Character set is empty"));
+    }
+    Ok((0..8).map(|_| chars[rng.gen_range(0, chars.len())]).collect())
+}
+
+/// Verify a signature with separate public key
+#[wasm_bindgen]
+pub fn verify_signature(public_key_bytes: &[u8], message: &[u8], signature_bytes: &[u8]) -> Result<bool, JsValue> {
+    verify_proof_wasm(public_key_bytes, message, signature_bytes)
+}
+
+/// Validate public key format
+#[wasm_bindgen]
+pub fn validate_public_key(public_key_bytes: &[u8]) -> bool {
+    public_key_bytes.len() == PUBLIC_KEY_LENGTH && 
+    PublicKey::from_bytes(public_key_bytes).is_ok()
+}
+
+/// Validate signature format
+#[wasm_bindgen]
+pub fn validate_signature(signature_bytes: &[u8]) -> bool {
+    signature_bytes.len() == 64 && 
+    Signature::from_bytes(signature_bytes).is_ok()
 }
 
 // Message structure for WASM
@@ -176,32 +194,30 @@ impl WasmMessage {
         self.is_signed
     }
     
-    pub fn sign(&mut self, keypair_bytes: &[u8]) {
+    pub fn sign(&mut self, keypair_bytes: &[u8]) -> Result<(), JsValue> {
         if keypair_bytes.len() != SECRET_KEY_LENGTH + PUBLIC_KEY_LENGTH {
-            return;
+            return Err(JsValue::from_str("Invalid keypair length"));
         }
         
         let privkey_bytes = &keypair_bytes[..SECRET_KEY_LENGTH];
         let message_data = format!("{}:{}:{}", self.sender_hex, self.recipient_hex, self.content);
         
-        match ed25519_dalek::SecretKey::from_bytes(privkey_bytes) {
-            Ok(secret) => {
-                let public = ed25519_dalek::PublicKey::from(&secret);
-                let keypair = Keypair { secret, public };
-                let sig = keypair.sign(message_data.as_bytes());
-                self.signature = Some(sig.to_bytes().to_vec());
-                self.is_signed = true;
-            }
-            Err(_) => {}
-        }
+        let secret = ed25519_dalek::SecretKey::from_bytes(privkey_bytes)
+            .map_err(|e| JsValue::from_str(&format!("SecretKey error: {e}")))?;
+        let public = ed25519_dalek::PublicKey::from(&secret);
+        let keypair = Keypair { secret, public };
+        let sig = keypair.sign(message_data.as_bytes());
+        self.signature = Some(sig.to_bytes().to_vec());
+        self.is_signed = true;
+        Ok(())
     }
     
-    pub fn verify(&self, pubkey_bytes: &[u8]) -> bool {
+    pub fn verify(&self, pubkey_bytes: &[u8]) -> Result<bool, JsValue> {
         if let Some(ref sig_bytes) = self.signature {
             let message_data = format!("{}:{}:{}", self.sender_hex, self.recipient_hex, self.content);
             verify_proof_wasm(pubkey_bytes, message_data.as_bytes(), sig_bytes)
         } else {
-            false
+            Ok(false)
         }
     }
     
@@ -214,53 +230,69 @@ impl WasmMessage {
     }
 }
 
-// KeyPair wrapper for WASM
+// C. Keypair Struct/Class
 #[wasm_bindgen]
 pub struct WasmKeyPair {
-    keypair_bytes: Vec<u8>,
+    secret: Vec<u8>,
+    public: Vec<u8>,
 }
 
 #[wasm_bindgen]
 impl WasmKeyPair {
     #[wasm_bindgen(constructor)]
     pub fn new() -> WasmKeyPair {
+        let kp = Keypair::generate(&mut OsRng);
         WasmKeyPair {
-            keypair_bytes: generate_keypair_wasm(),
+            secret: kp.secret.to_bytes().to_vec(),
+            public: kp.public.to_bytes().to_vec(),
         }
     }
     
-    pub fn from_bytes(bytes: &[u8]) -> Option<WasmKeyPair> {
-        if bytes.len() == SECRET_KEY_LENGTH + PUBLIC_KEY_LENGTH {
-            Some(WasmKeyPair {
-                keypair_bytes: bytes.to_vec(),
-            })
-        } else {
-            None
+    #[wasm_bindgen(js_name = from_bytes)]
+    pub fn from_bytes(bytes: &[u8]) -> Result<WasmKeyPair, JsValue> {
+        if bytes.len() != SECRET_KEY_LENGTH + PUBLIC_KEY_LENGTH {
+            return Err(JsValue::from_str("Keypair bytes wrong length"));
         }
+        let secret = SecretKey::from_bytes(&bytes[0..SECRET_KEY_LENGTH])
+            .map_err(|e| JsValue::from_str(&format!("SecretKey error: {e}")))?;
+        let public = PublicKey::from_bytes(&bytes[SECRET_KEY_LENGTH..])
+            .map_err(|e| JsValue::from_str(&format!("PublicKey error: {e}")))?;
+        Ok(WasmKeyPair {
+            secret: secret.to_bytes().to_vec(),
+            public: public.to_bytes().to_vec(),
+        })
     }
     
-    #[wasm_bindgen(getter)]
-    pub fn public_key_bytes(&self) -> Vec<u8> {
-        get_public_key_from_keypair(&self.keypair_bytes)
-    }
-    
-    #[wasm_bindgen(getter)]
-    pub fn private_key_bytes(&self) -> Vec<u8> {
-        get_private_key_from_keypair(&self.keypair_bytes)
-    }
-    
-    #[wasm_bindgen(getter)]
+    #[wasm_bindgen(getter, js_name = public_key_hex)]
     pub fn public_key_hex(&self) -> String {
-        hex::encode(self.public_key_bytes())
+        hex::encode(&self.public)
     }
     
-    #[wasm_bindgen(getter)]
+    #[wasm_bindgen(getter, js_name = public_key_bytes)]
+    pub fn public_key_bytes(&self) -> Vec<u8> {
+        self.public.clone()
+    }
+    
+    #[wasm_bindgen(getter, js_name = private_key_bytes)]
+    pub fn private_key_bytes(&self) -> Vec<u8> {
+        self.secret.clone()
+    }
+    
+    #[wasm_bindgen(getter, js_name = keypair_bytes)]
     pub fn keypair_bytes(&self) -> Vec<u8> {
-        self.keypair_bytes.clone()
+        let mut bytes = Vec::with_capacity(SECRET_KEY_LENGTH + PUBLIC_KEY_LENGTH);
+        bytes.extend_from_slice(&self.secret);
+        bytes.extend_from_slice(&self.public);
+        bytes
     }
     
-    pub fn sign(&self, data: &[u8]) -> Vec<u8> {
-        make_proof_wasm(&self.private_key_bytes(), data)
+    pub fn sign(&self, data: &[u8]) -> Result<Vec<u8>, JsValue> {
+        let secret = SecretKey::from_bytes(&self.secret)
+            .map_err(|e| JsValue::from_str(&format!("SecretKey error: {e}")))?;
+        let public = PublicKey::from_bytes(&self.public)
+            .map_err(|e| JsValue::from_str(&format!("PublicKey error: {e}")))?;
+        let keypair = Keypair { secret, public };
+        Ok(keypair.sign(data).to_bytes().to_vec())
     }
 }
 
@@ -298,17 +330,18 @@ impl WasmProof {
         self.id.clone()
     }
     
-    pub fn sign(&mut self, keypair: &WasmKeyPair) {
-        let signature = keypair.sign(&self.context);
+    pub fn sign(&mut self, keypair: &WasmKeyPair) -> Result<(), JsValue> {
+        let signature = keypair.sign(&self.context)?;
         self.signature = Some(signature);
         self.public_key = Some(keypair.public_key_bytes());
+        Ok(())
     }
     
-    pub fn verify(&self) -> bool {
+    pub fn verify(&self) -> Result<bool, JsValue> {
         if let (Some(ref sig), Some(ref pubkey)) = (&self.signature, &self.public_key) {
             verify_proof_wasm(pubkey, &self.context, sig)
         } else {
-            false
+            Ok(false)
         }
     }
     
@@ -358,7 +391,7 @@ impl Utils {
         validate_invite_code(code)
     }
     
-    pub fn generate_invite_code() -> String {
+    pub fn generate_invite_code() -> Result<String, JsValue> {
         generate_invite_code()
     }
     

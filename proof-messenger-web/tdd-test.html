@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>TDD-Ready WASM Crypto Tests</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #4a5568;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            background: #f7fafc;
+        }
+        .test-section h2 {
+            color: #2d3748;
+            margin-top: 0;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .log {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .success { color: #48bb78; }
+        .error { color: #f56565; }
+        .warning { color: #ed8936; }
+        .info { color: #4299e1; }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .test-pass {
+            background: #c6f6d5;
+            color: #22543d;
+            border-left: 4px solid #48bb78;
+        }
+        .test-fail {
+            background: #fed7d7;
+            color: #742a2a;
+            border-left: 4px solid #f56565;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background: #edf2f7;
+            border-radius: 8px;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 TDD-Ready WASM Crypto Test Suite</h1>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number" id="total-tests">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number success" id="passed-tests">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number error" id="failed-tests">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number info" id="test-time">0ms</div>
+                <div class="stat-label">Duration</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔑 Keypair Generation & Validation Tests</h2>
+            <button onclick="runKeypairTests()">Run Keypair Tests</button>
+            <button onclick="runErrorHandlingTests()">Run Error Handling Tests</button>
+            <div class="log" id="keypair-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔐 Cryptographic Operations Tests</h2>
+            <button onclick="runCryptoTests()">Run Crypto Tests</button>
+            <button onclick="runSignatureTests()">Run Signature Tests</button>
+            <div class="log" id="crypto-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 Message & Proof Tests</h2>
+            <button onclick="runMessageTests()">Run Message Tests</button>
+            <button onclick="runProofTests()">Run Proof Tests</button>
+            <div class="log" id="message-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 Property-Based Tests</h2>
+            <button onclick="runPropertyTests()">Run Property Tests</button>
+            <button onclick="runFuzzTests()">Run Fuzz Tests</button>
+            <div class="log" id="property-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 Performance & Benchmark Tests</h2>
+            <button onclick="runPerformanceTests()">Run Performance Tests</button>
+            <div class="log" id="performance-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 All Test Results</h2>
+            <button onclick="runAllTests()" style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                🧪 Run All Tests
+            </button>
+            <button onclick="clearLogs()">Clear Logs</button>
+            <div class="log" id="all-results"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import init, {
+            WasmKeyPair,
+            WasmMessage,
+            WasmProof,
+            bytes_to_hex,
+            hex_to_bytes,
+            generate_invite_code,
+            validate_invite_code,
+            validate_public_key,
+            validate_signature,
+            verify_signature,
+            console_log,
+            console_warn,
+            console_error
+        } from './pkg/proof_messenger_web.js';
+
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            startTime: 0
+        };
+
+        // Initialize WASM
+        async function initWasm() {
+            try {
+                await init();
+                log('all-results', '✅ WASM initialized successfully', 'success');
+                return true;
+            } catch (error) {
+                log('all-results', `❌ WASM initialization failed: ${error}`, 'error');
+                return false;
+            }
+        }
+
+        // Test framework utilities
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : 
+                            type === 'error' ? 'error' : 
+                            type === 'warning' ? 'warning' : 'info';
+            element.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function assert(condition, message, logElement) {
+            testStats.total++;
+            if (condition) {
+                testStats.passed++;
+                log(logElement, `✅ PASS: ${message}`, 'success');
+                log('all-results', `✅ PASS: ${message}`, 'success');
+                return true;
+            } else {
+                testStats.failed++;
+                log(logElement, `❌ FAIL: ${message}`, 'error');
+                log('all-results', `❌ FAIL: ${message}`, 'error');
+                return false;
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('total-tests').textContent = testStats.total;
+            document.getElementById('passed-tests').textContent = testStats.passed;
+            document.getElementById('failed-tests').textContent = testStats.failed;
+            document.getElementById('test-time').textContent = `${Date.now() - testStats.startTime}ms`;
+        }
+
+        // Test suites
+        window.runKeypairTests = async function() {
+            log('keypair-log', '🔑 Starting Keypair Tests...', 'info');
+            
+            try {
+                // Test 1: Basic keypair generation
+                const kp1 = new WasmKeyPair();
+                assert(kp1 !== null, 'Keypair generation succeeds', 'keypair-log');
+                assert(kp1.public_key_bytes.length === 32, 'Public key is 32 bytes', 'keypair-log');
+                assert(kp1.private_key_bytes.length === 32, 'Private key is 32 bytes', 'keypair-log');
+                assert(kp1.keypair_bytes.length === 64, 'Keypair bytes is 64 bytes', 'keypair-log');
+
+                // Test 2: Hex conversion
+                const pubHex = kp1.public_key_hex;
+                assert(pubHex.length === 64, 'Public key hex is 64 chars', 'keypair-log');
+                assert(/^[0-9a-f]+$/.test(pubHex), 'Public key hex is valid hex', 'keypair-log');
+
+                // Test 3: Keypair from bytes
+                const kp2 = WasmKeyPair.from_bytes(kp1.keypair_bytes);
+                assert(kp2 !== null, 'Keypair from bytes succeeds', 'keypair-log');
+                assert(kp2.public_key_hex === kp1.public_key_hex, 'Reconstructed keypair matches', 'keypair-log');
+
+                // Test 4: Multiple keypairs are different
+                const kp3 = new WasmKeyPair();
+                assert(kp1.public_key_hex !== kp3.public_key_hex, 'Different keypairs have different keys', 'keypair-log');
+
+                log('keypair-log', '🎉 Keypair tests completed!', 'success');
+            } catch (error) {
+                log('keypair-log', `💥 Keypair test error: ${error}`, 'error');
+            }
+            updateStats();
+        };
+
+        window.runErrorHandlingTests = async function() {
+            log('keypair-log', '⚠️ Starting Error Handling Tests...', 'info');
+            
+            try {
+                // Test 1: Invalid hex decoding
+                try {
+                    hex_to_bytes('invalid_hex');
+                    assert(false, 'Invalid hex should throw error', 'keypair-log');
+                } catch (error) {
+                    assert(true, 'Invalid hex throws error correctly', 'keypair-log');
+                }
+
+                // Test 2: Invalid keypair bytes length
+                try {
+                    WasmKeyPair.from_bytes(new Uint8Array(30)); // Wrong length
+                    assert(false, 'Invalid keypair length should throw error', 'keypair-log');
+                } catch (error) {
+                    assert(true, 'Invalid keypair length throws error correctly', 'keypair-log');
+                }
+
+                // Test 3: Invalid keypair bytes content
+                try {
+                    const invalidBytes = new Uint8Array(64);
+                    // Fill with invalid key data
+                    invalidBytes.fill(255);
+                    WasmKeyPair.from_bytes(invalidBytes);
+                    assert(false, 'Invalid keypair content should throw error', 'keypair-log');
+                } catch (error) {
+                    assert(true, 'Invalid keypair content throws error correctly', 'keypair-log');
+                }
+
+                log('keypair-log', '🎉 Error handling tests completed!', 'success');
+            } catch (error) {
+                log('keypair-log', `💥 Error handling test error: ${error}`, 'error');
+            }
+            updateStats();
+        };
+
+        window.runCryptoTests = async function() {
+            log('crypto-log', '🔐 Starting Crypto Tests...', 'info');
+            
+            try {
+                const kp = new WasmKeyPair();
+                const message = new TextEncoder().encode('Hello, World!');
+
+                // Test 1: Signing
+                const signature = kp.sign(message);
+                assert(signature.length === 64, 'Signature is 64 bytes', 'crypto-log');
+
+                // Test 2: Verification
+                const isValid = verify_signature(kp.public_key_bytes, message, signature);
+                assert(isValid === true, 'Valid signature verifies correctly', 'crypto-log');
+
+                // Test 3: Invalid signature detection
+                const wrongMessage = new TextEncoder().encode('Wrong message');
+                const isInvalid = verify_signature(kp.public_key_bytes, wrongMessage, signature);
+                assert(isInvalid === false, 'Invalid signature detected correctly', 'crypto-log');
+
+                // Test 4: Key validation
+                assert(validate_public_key(kp.public_key_bytes) === true, 'Valid public key validates', 'crypto-log');
+                assert(validate_signature(signature) === true, 'Valid signature validates', 'crypto-log');
+
+                // Test 5: Invalid key detection
+                const invalidKey = new Uint8Array(32);
+                invalidKey.fill(255);
+                assert(validate_public_key(invalidKey) === false, 'Invalid public key detected', 'crypto-log');
+
+                log('crypto-log', '🎉 Crypto tests completed!', 'success');
+            } catch (error) {
+                log('crypto-log', `💥 Crypto test error: ${error}`, 'error');
+            }
+            updateStats();
+        };
+
+        window.runSignatureTests = async function() {
+            log('crypto-log', '✍️ Starting Signature Tests...', 'info');
+            
+            try {
+                // Test multiple signatures with same key
+                const kp = new WasmKeyPair();
+                const messages = [
+                    'Message 1',
+                    'Message 2',
+                    'A longer message with more content to test',
+                    '🚀 Unicode message with emojis! 🎉',
+                    '' // Empty message
+                ];
+
+                for (let i = 0; i < messages.length; i++) {
+                    const msgBytes = new TextEncoder().encode(messages[i]);
+                    const sig = kp.sign(msgBytes);
+                    const valid = verify_signature(kp.public_key_bytes, msgBytes, sig);
+                    assert(valid === true, `Message ${i + 1} signature valid`, 'crypto-log');
+                }
+
+                log('crypto-log', '🎉 Signature tests completed!', 'success');
+            } catch (error) {
+                log('crypto-log', `💥 Signature test error: ${error}`, 'error');
+            }
+            updateStats();
+        };
+
+        window.runMessageTests = async function() {
+            log('message-log', '📝 Starting Message Tests...', 'info');
+            
+            try {
+                const alice = new WasmKeyPair();
+                const bob = new WasmKeyPair();
+
+                // Test 1: Message creation
+                const message = new WasmMessage(
+                    alice.public_key_bytes,
+                    bob.public_key_bytes,
+                    'Hello Bob!'
+                );
+                assert(message !== null, 'Message creation succeeds', 'message-log');
+                assert(message.content === 'Hello Bob!', 'Message content correct', 'message-log');
+                assert(message.is_signed === false, 'Message initially unsigned', 'message-log');
+
+                // Test 2: Message signing
+                message.sign(alice.keypair_bytes);
+                assert(message.is_signed === true, 'Message signed successfully', 'message-log');
+
+                // Test 3: Message verification
+                const isValid = message.verify(alice.public_key_bytes);
+                assert(isValid === true, 'Message signature valid', 'message-log');
+
+                // Test 4: JSON serialization
+                const json = message.to_json();
+                assert(json.length > 0, 'Message JSON serialization works', 'message-log');
+
+                const restored = WasmMessage.from_json(json);
+                assert(restored !== null, 'Message JSON deserialization works', 'message-log');
+                assert(restored.content === message.content, 'Restored message content matches', 'message-log');
+
+                log('message-log', '🎉 Message tests completed!', 'success');
+            } catch (error) {
+                log('message-log', `💥 Message test error: ${error}`, 'error');
+            }
+            updateStats();
+        };
+
+        window.runProofTests = async function() {
+            log('message-log', '🛡️ Starting Proof Tests...', 'info');
+            
+            try {
+                const kp = new WasmKeyPair();
+
+                // Test 1: Proof creation
+                const proof = new WasmProof('identity', kp.public_key_bytes);
+                assert(proof !== null, 'Proof creation succeeds', 'message-log');
+                assert(proof.id.length > 0, 'Proof has ID', 'message-log');
+
+                // Test 2: Proof signing
+                proof.sign(kp);
+                assert(true, 'Proof signing succeeds', 'message-log');
+
+                // Test 3: Proof verification
+                const isValid = proof.verify();
+                assert(isValid === true, 'Proof verification succeeds', 'message-log');
+
+                // Test 4: Proof JSON
+                const json = proof.to_json();
+                assert(json.length > 0, 'Proof JSON serialization works', 'message-log');
+
+                log('message-log', '🎉 Proof tests completed!', 'success');
+            } catch (error) {
+                log('message-log', `💥 Proof test error: ${error}`, 'error');
+            }
+            updateStats();
+        };
+
+        window.runPropertyTests = async function() {
+            log('property-log', '🎯 Starting Property-Based Tests...', 'info');
+            
+            try {
+                // Property 1: Keypair generation is deterministic from same bytes
+                const kp1 = new WasmKeyPair();
+                const bytes = kp1.keypair_bytes;
+                const kp2 = WasmKeyPair.from_bytes(bytes);
+                const kp3 = WasmKeyPair.from_bytes(bytes);
+                
+                assert(kp2.public_key_hex === kp3.public_key_hex, 
+                    'Same bytes produce same keypair', 'property-log');
+
+                // Property 2: Sign-verify roundtrip always works
+                for (let i = 0; i < 10; i++) {
+                    const kp = new WasmKeyPair();
+                    const data = crypto.getRandomValues(new Uint8Array(Math.floor(Math.random() * 1000)));
+                    const sig = kp.sign(data);
+                    const valid = verify_signature(kp.public_key_bytes, data, sig);
+                    assert(valid === true, `Sign-verify roundtrip ${i + 1}`, 'property-log');
+                }
+
+                // Property 3: Different keys produce different signatures
+                const kp_a = new WasmKeyPair();
+                const kp_b = new WasmKeyPair();
+                const testData = new TextEncoder().encode('test');
+                const sig_a = kp_a.sign(testData);
+                const sig_b = kp_b.sign(testData);
+                
+                assert(bytes_to_hex(sig_a) !== bytes_to_hex(sig_b), 
+                    'Different keys produce different signatures', 'property-log');
+
+                log('property-log', '🎉 Property tests completed!', 'success');
+            } catch (error) {
+                log('property-log', `💥 Property test error: ${error}`, 'error');
+            }
+            updateStats();
+        };
+
+        window.runFuzzTests = async function() {
+            log('property-log', '🎲 Starting Fuzz Tests...', 'info');
+            
+            try {
+                // Fuzz test 1: Random data signing
+                for (let i = 0; i < 50; i++) {
+                    const kp = new WasmKeyPair();
+                    const randomSize = Math.floor(Math.random() * 10000);
+                    const randomData = crypto.getRandomValues(new Uint8Array(randomSize));
+                    
+                    try {
+                        const sig = kp.sign(randomData);
+                        const valid = verify_signature(kp.public_key_bytes, randomData, sig);
+                        assert(valid === true, `Fuzz test ${i + 1}: random data signing`, 'property-log');
+                    } catch (error) {
+                        log('property-log', `Fuzz test ${i + 1} failed: ${error}`, 'warning');
+                    }
+                }
+
+                // Fuzz test 2: Invalid input handling
+                const kp = new WasmKeyPair();
+                const validData = new TextEncoder().encode('test');
+                
+                // Test with corrupted signatures
+                for (let i = 0; i < 10; i++) {
+                    const sig = kp.sign(validData);
+                    // Corrupt random byte
+                    sig[Math.floor(Math.random() * sig.length)] ^= 0xFF;
+                    
+                    try {
+                        const valid = verify_signature(kp.public_key_bytes, validData, sig);
+                        assert(valid === false, `Corrupted signature ${i + 1} detected`, 'property-log');
+                    } catch (error) {
+                        // Expected for some corrupted signatures
+                        assert(true, `Corrupted signature ${i + 1} threw error (expected)`, 'property-log');
+                    }
+                }
+
+                log('property-log', '🎉 Fuzz tests completed!', 'success');
+            } catch (error) {
+                log('property-log', `💥 Fuzz test error: ${error}`, 'error');
+            }
+            updateStats();
+        };
+
+        window.runPerformanceTests = async function() {
+            log('performance-log', '🚀 Starting Performance Tests...', 'info');
+            
+            try {
+                const iterations = 100;
+                
+                // Test 1: Keypair generation performance
+                const start1 = performance.now();
+                for (let i = 0; i < iterations; i++) {
+                    new WasmKeyPair();
+                }
+                const end1 = performance.now();
+                const keypairTime = (end1 - start1) / iterations;
+                log('performance-log', `Keypair generation: ${keypairTime.toFixed(2)}ms avg`, 'info');
+                assert(keypairTime < 50, 'Keypair generation under 50ms', 'performance-log');
+
+                // Test 2: Signing performance
+                const kp = new WasmKeyPair();
+                const testData = new TextEncoder().encode('Performance test message');
+                
+                const start2 = performance.now();
+                for (let i = 0; i < iterations; i++) {
+                    kp.sign(testData);
+                }
+                const end2 = performance.now();
+                const signTime = (end2 - start2) / iterations;
+                log('performance-log', `Signing: ${signTime.toFixed(2)}ms avg`, 'info');
+                assert(signTime < 10, 'Signing under 10ms', 'performance-log');
+
+                // Test 3: Verification performance
+                const signature = kp.sign(testData);
+                
+                const start3 = performance.now();
+                for (let i = 0; i < iterations; i++) {
+                    verify_signature(kp.public_key_bytes, testData, signature);
+                }
+                const end3 = performance.now();
+                const verifyTime = (end3 - start3) / iterations;
+                log('performance-log', `Verification: ${verifyTime.toFixed(2)}ms avg`, 'info');
+                assert(verifyTime < 5, 'Verification under 5ms', 'performance-log');
+
+                log('performance-log', '🎉 Performance tests completed!', 'success');
+            } catch (error) {
+                log('performance-log', `💥 Performance test error: ${error}`, 'error');
+            }
+            updateStats();
+        };
+
+        window.runAllTests = async function() {
+            testStats = { total: 0, passed: 0, failed: 0, startTime: Date.now() };
+            document.getElementById('all-results').innerHTML = '';
+            
+            log('all-results', '🧪 Starting Complete Test Suite...', 'info');
+            
+            await runKeypairTests();
+            await runErrorHandlingTests();
+            await runCryptoTests();
+            await runSignatureTests();
+            await runMessageTests();
+            await runProofTests();
+            await runPropertyTests();
+            await runFuzzTests();
+            await runPerformanceTests();
+            
+            const duration = Date.now() - testStats.startTime;
+            const passRate = ((testStats.passed / testStats.total) * 100).toFixed(1);
+            
+            log('all-results', `\n🎉 Test Suite Complete!`, 'success');
+            log('all-results', `📊 Results: ${testStats.passed}/${testStats.total} passed (${passRate}%)`, 'info');
+            log('all-results', `⏱️ Duration: ${duration}ms`, 'info');
+            
+            if (testStats.failed === 0) {
+                log('all-results', '✅ All tests passed! 🎉', 'success');
+            } else {
+                log('all-results', `❌ ${testStats.failed} tests failed`, 'error');
+            }
+            
+            updateStats();
+        };
+
+        window.clearLogs = function() {
+            const logs = document.querySelectorAll('.log');
+            logs.forEach(log => log.innerHTML = '');
+            testStats = { total: 0, passed: 0, failed: 0, startTime: 0 };
+            updateStats();
+        };
+
+        // Initialize on page load
+        window.addEventListener('load', async () => {
+            const success = await initWasm();
+            if (success) {
+                log('all-results', '🚀 Ready to run tests!', 'info');
+            }
+        });
+
+        // Make functions globally available
+        window.log = log;
+        window.assert = assert;
+        window.updateStats = updateStats;
+    </script>
+</body>
+</html>

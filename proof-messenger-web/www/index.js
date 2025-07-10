@@ -230,7 +230,13 @@ class ProofMessengerApp {
             );
             
             // Sign message
-            message.sign(this.keypair);
+            try {
+                message.sign(this.keypair.keypair_bytes);
+            } catch (signError) {
+                console_error('Failed to sign message: ' + signError);
+                this.showError('Failed to sign message: ' + signError.message);
+                return;
+            }
             
             // Add identity proof if requested
             if (attachProof) {
@@ -526,7 +532,12 @@ class ProofMessengerApp {
             // Alice creates identity proof
             this.logDemo('2. Alice creates identity proof...');
             const aliceProof = new WasmProof('identity', alice.public_key_bytes);
-            aliceProof.sign(alice);
+            try {
+                aliceProof.sign(alice);
+            } catch (signError) {
+                this.logDemo(`❌ Failed to sign proof: ${signError}`);
+                return;
+            }
             this.logDemo(`   ✅ Identity proof: ${aliceProof.id}`);
             
             // Alice sends message to Bob
@@ -536,17 +547,34 @@ class ProofMessengerApp {
                 bob.public_key_bytes,
                 'Hello Bob! This is a demo message from Alice.'
             );
-            message.sign(alice);
+            try {
+                message.sign(alice.keypair_bytes);
+            } catch (signError) {
+                this.logDemo(`❌ Failed to sign message: ${signError}`);
+                return;
+            }
             this.logDemo(`   ✅ Message: ${message.id}`);
             this.logDemo(`   📝 Content: "${message.content}"`);
             
             // Bob verifies message
             this.logDemo('4. Bob verifies the message...');
-            const sigValid = message.verify(aliceKeypair.public_key_bytes);
+            let sigValid = false;
+            try {
+                sigValid = message.verify(alice.public_key_bytes);
+            } catch (verifyError) {
+                this.logDemo(`❌ Failed to verify message: ${verifyError}`);
+                return;
+            }
             this.logDemo(`   Signature: ${sigValid ? '✅ Valid' : '❌ Invalid'}`);
             
             // Verify proof
-            const proofValid = aliceProof.verify();
+            let proofValid = false;
+            try {
+                proofValid = aliceProof.verify();
+            } catch (verifyError) {
+                this.logDemo(`❌ Failed to verify proof: ${verifyError}`);
+                return;
+            }
             this.logDemo(`   Identity proof: ${proofValid ? '✅ Valid' : '❌ Invalid'}`);
             
             this.logDemo('🎉 End-to-end demo completed successfully!');
@@ -659,10 +687,17 @@ class ProofMessengerApp {
             const displayNameData = LocalStorage.load('display_name');
             
             if (identityData && displayNameData) {
-                const keyBytes = hex_to_bytes(identityData);
-                this.keypair = WasmKeyPair.from_bytes(keyBytes);
-                this.displayName = displayNameData;
-                console_log('Loaded saved identity');
+                try {
+                    const keyBytes = hex_to_bytes(identityData);
+                    this.keypair = WasmKeyPair.from_bytes(keyBytes);
+                    this.displayName = displayNameData;
+                    console_log('Loaded saved identity');
+                } catch (cryptoError) {
+                    console_error('Failed to load keypair: ' + cryptoError);
+                    // Clear invalid data
+                    LocalStorage.remove('identity');
+                    LocalStorage.remove('display_name');
+                }
             }
             
             // Load invitations
@@ -678,11 +713,18 @@ class ProofMessengerApp {
     
     async saveIdentity() {
         try {
-            await LocalStorage.save('identity', bytes_to_hex(this.keypair.private_key_bytes));
-            await LocalStorage.save('display_name', this.displayName);
-            console_log('Identity saved to local storage');
+            const privateKeyHex = bytes_to_hex(this.keypair.private_key_bytes);
+            const success1 = LocalStorage.save('identity', privateKeyHex);
+            const success2 = LocalStorage.save('display_name', this.displayName);
+            
+            if (success1 && success2) {
+                console_log('Identity saved to local storage');
+            } else {
+                throw new Error('Failed to save to local storage');
+            }
         } catch (error) {
             console_error('Failed to save identity: ' + error);
+            this.showError('Failed to save identity: ' + error.message);
         }
     }
     
