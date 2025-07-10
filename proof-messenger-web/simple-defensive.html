@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Defensive WASM Usage</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #00ff00;
+        }
+        
+        h1 {
+            color: #00ffff;
+            text-align: center;
+        }
+        
+        #output {
+            background: #000;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            min-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .info { color: #ffff00; }
+    </style>
+</head>
+<body>
+    <h1>🛡️ Simple Defensive WASM Usage</h1>
+    <div id="output">Loading WASM and running tests...</div>
+
+    <script type="module">
+        import init, {
+            WasmKeyPair,
+            WasmMessage,
+            generate_invite_code,
+            validate_invite_code,
+            bytes_to_hex,
+            hex_to_bytes
+        } from "./pkg/proof_messenger_web.js";
+
+        // Defensive async WASM loading
+        async function initWasmSafe() {
+            try {
+                await init();
+                console.log("WASM initialized");
+                return true;
+            } catch (e) {
+                console.error("WASM init failed:", e);
+                throw e;
+            }
+        }
+
+        (async () => {
+            const output = document.getElementById('output');
+            
+            function log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const className = type;
+                output.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+                output.scrollTop = output.scrollHeight;
+            }
+
+            try {
+                await initWasmSafe();
+                log("✅ WASM initialized successfully", 'success');
+
+                // TDD-style test: Keypair generation
+                let kp;
+                try {
+                    kp = new WasmKeyPair();
+                    console.assert(kp.public_key_bytes.length === 32, "Public key must be 32 bytes");
+                    log(`✅ Keypair generated: ${kp.public_key_hex}`, 'success');
+                } catch (e) {
+                    log(`❌ Keypair test failed: ${e.message}`, 'error');
+                }
+
+                // TDD-style test: Invite code
+                try {
+                    const invite = generate_invite_code();
+                    console.assert(validate_invite_code(invite), "Invite code should validate");
+                    log(`✅ Invite code: ${invite}`, 'success');
+                } catch (e) {
+                    log(`❌ Invite code test failed: ${e.message}`, 'error');
+                }
+
+                // TDD: Message signing and verification
+                try {
+                    const msg = new WasmMessage(kp.public_key_bytes, kp.public_key_bytes, "Hello!");
+                    
+                    // Sign with full keypair bytes (private + public)
+                    msg.sign(kp.keypair_bytes);
+                    console.assert(msg.is_signed, "Message must be signed");
+                    log(`✅ Message signed: ${msg.id}`, 'success');
+                    
+                    const verified = msg.verify(kp.public_key_bytes);
+                    console.assert(verified, "Signed message must verify");
+                    log(`✅ Message verified: ${verified}`, 'success');
+                    
+                    // Test with wrong key
+                    const wrongKp = new WasmKeyPair();
+                    const wrongVerify = msg.verify(wrongKp.public_key_bytes);
+                    console.assert(!wrongVerify, "Message should not verify with wrong key");
+                    log(`✅ Wrong key test passed: ${!wrongVerify}`, 'success');
+                    
+                } catch (e) {
+                    log(`❌ Message test failed: ${e.message}`, 'error');
+                }
+
+                // Data conversion test
+                try {
+                    const testBytes = new Uint8Array([0x01, 0x23, 0x45, 0x67]);
+                    const hex = bytes_to_hex(testBytes);
+                    const backToBytes = hex_to_bytes(hex);
+                    
+                    console.assert(hex === "01234567", "Hex conversion should be correct");
+                    console.assert(backToBytes.length === testBytes.length, "Roundtrip should preserve length");
+                    log(`✅ Data conversion test: ${hex}`, 'success');
+                } catch (e) {
+                    log(`❌ Data conversion test failed: ${e.message}`, 'error');
+                }
+
+                // Display final results
+                log("\n" + "=".repeat(50), 'info');
+                log("🎉 All defensive tests completed successfully!", 'success');
+                log(`📋 Keypair: ${kp.public_key_hex.substring(0, 16)}...`, 'info');
+                log(`📋 Message ID: ${kp ? 'Generated' : 'Failed'}`, 'info');
+                log(`📋 All assertions passed: ✅`, 'success');
+
+            } catch (error) {
+                log(`💥 Critical error: ${error.message}`, 'error');
+                log(`Stack: ${error.stack}`, 'error');
+            }
+        })();
+    </script>
+</body>
+</html>

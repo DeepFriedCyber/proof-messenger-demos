@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defensive WASM Crypto Usage - TDD Style</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #4a5568;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #4299e1;
+            background: #f7fafc;
+        }
+        
+        .test-section h3 {
+            color: #2d3748;
+            margin-top: 0;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+        
+        .status.pass {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status.fail {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .status.pending {
+            background: #fef5e7;
+            color: #744210;
+        }
+        
+        .output {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 0 10px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #3182ce;
+        }
+        
+        button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4299e1;
+        }
+        
+        .error-details {
+            background: #fed7d7;
+            border: 1px solid #fc8181;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            color: #742a2a;
+        }
+        
+        .success-details {
+            background: #c6f6d5;
+            border: 1px solid #68d391;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            color: #22543d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ Defensive WASM Crypto Usage</h1>
+        <p style="text-align: center; color: #718096; font-size: 1.1em;">
+            TDD-Style Testing with Comprehensive Error Handling
+        </p>
+        
+        <div class="controls">
+            <button id="runTests" onclick="runAllTests()">🧪 Run All Tests</button>
+            <button id="clearOutput" onclick="clearOutput()">🗑️ Clear Output</button>
+            <button id="runStress" onclick="runStressTest()">⚡ Stress Test</button>
+        </div>
+        
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTests">0</div>
+                <div>Total Tests</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="passedTests">0</div>
+                <div>Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failedTests">0</div>
+                <div>Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="testTime">0ms</div>
+                <div>Execution Time</div>
+            </div>
+        </div>
+        
+        <div id="testResults"></div>
+        <div class="output" id="output">Ready to run tests...</div>
+    </div>
+
+    <script type="module">
+        import init, {
+            WasmKeyPair,
+            WasmMessage,
+            generate_invite_code,
+            validate_invite_code,
+            bytes_to_hex,
+            hex_to_bytes,
+            verify_signature,
+            validate_public_key,
+            validate_signature,
+            console_log,
+            console_warn,
+            console_error
+        } from './pkg/proof_messenger_web.js';
+
+        // Global test state
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            startTime: 0
+        };
+
+        // Defensive async WASM loading with detailed error reporting
+        async function initWasmSafe() {
+            try {
+                console.log("🚀 Initializing WASM module...");
+                await init();
+                console.log("✅ WASM initialized successfully");
+                return true;
+            } catch (e) {
+                console.error("❌ WASM init failed:", e);
+                logOutput(`CRITICAL ERROR: WASM initialization failed
+Error: ${e.message}
+Stack: ${e.stack}
+This usually indicates:
+- Missing or corrupted WASM files
+- Browser compatibility issues
+- Network loading problems`, 'error');
+                throw e;
+            }
+        }
+
+        // Enhanced logging with timestamps and categorization
+        function logOutput(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = {
+                'info': '📝',
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'test': '🧪'
+            }[type] || '📝';
+            
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Test assertion with detailed reporting
+        function assert(condition, message, testName) {
+            testStats.total++;
+            updateStats();
+            
+            if (condition) {
+                testStats.passed++;
+                logOutput(`PASS: ${testName} - ${message}`, 'success');
+                addTestResult(testName, true, message);
+                return true;
+            } else {
+                testStats.failed++;
+                logOutput(`FAIL: ${testName} - ${message}`, 'error');
+                addTestResult(testName, false, message);
+                return false;
+            }
+        }
+
+        // Enhanced test result display
+        function addTestResult(testName, passed, message) {
+            const resultsDiv = document.getElementById('testResults');
+            const testDiv = document.createElement('div');
+            testDiv.className = 'test-section';
+            
+            const status = passed ? 'pass' : 'fail';
+            const statusText = passed ? 'PASS' : 'FAIL';
+            
+            testDiv.innerHTML = `
+                <h3>${testName} <span class="status ${status}">${statusText}</span></h3>
+                <div class="${passed ? 'success-details' : 'error-details'}">
+                    ${message}
+                </div>
+            `;
+            
+            resultsDiv.appendChild(testDiv);
+        }
+
+        // Update statistics display
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testStats.total;
+            document.getElementById('passedTests').textContent = testStats.passed;
+            document.getElementById('failedTests').textContent = testStats.failed;
+            
+            if (testStats.startTime) {
+                const elapsed = Date.now() - testStats.startTime;
+                document.getElementById('testTime').textContent = `${elapsed}ms`;
+            }
+        }
+
+        // Clear output and reset stats
+        function clearOutput() {
+            document.getElementById('output').textContent = 'Output cleared...\n';
+            document.getElementById('testResults').innerHTML = '';
+            testStats = { total: 0, passed: 0, failed: 0, startTime: 0 };
+            updateStats();
+        }
+
+        // Comprehensive test suite with defensive programming
+        async function runAllTests() {
+            testStats.startTime = Date.now();
+            logOutput("🧪 Starting comprehensive defensive test suite...", 'test');
+            
+            try {
+                // Test 1: WASM Initialization
+                await testWasmInitialization();
+                
+                // Test 2: Keypair Generation and Validation
+                await testKeypairGeneration();
+                
+                // Test 3: Invite Code Generation and Validation
+                await testInviteCodeSystem();
+                
+                // Test 4: Message Creation and Signing
+                await testMessageOperations();
+                
+                // Test 5: Cryptographic Verification
+                await testCryptographicVerification();
+                
+                // Test 6: Error Handling and Edge Cases
+                await testErrorHandling();
+                
+                // Test 7: Data Conversion and Validation
+                await testDataConversion();
+                
+                // Test 8: Security and Tampering Detection
+                await testSecurityFeatures();
+                
+                logOutput(`🎉 Test suite completed! ${testStats.passed}/${testStats.total} tests passed`, 'success');
+                
+            } catch (error) {
+                logOutput(`💥 Test suite failed with critical error: ${error.message}`, 'error');
+            }
+            
+            updateStats();
+        }
+
+        // Test 1: WASM Initialization
+        async function testWasmInitialization() {
+            logOutput("Testing WASM initialization...", 'test');
+            
+            try {
+                const initialized = await initWasmSafe();
+                assert(initialized, "WASM module should initialize successfully", "WASM Initialization");
+                
+                // Test WASM function availability
+                assert(typeof WasmKeyPair === 'function', "WasmKeyPair constructor should be available", "WASM Function Availability");
+                assert(typeof generate_invite_code === 'function', "generate_invite_code should be available", "WASM Function Availability");
+                assert(typeof validate_invite_code === 'function', "validate_invite_code should be available", "WASM Function Availability");
+                
+            } catch (error) {
+                assert(false, `WASM initialization failed: ${error.message}`, "WASM Initialization");
+            }
+        }
+
+        // Test 2: Keypair Generation and Validation
+        async function testKeypairGeneration() {
+            logOutput("Testing keypair generation and validation...", 'test');
+            
+            try {
+                // Test basic keypair generation
+                const kp = new WasmKeyPair();
+                assert(kp !== null && kp !== undefined, "Keypair should be created successfully", "Keypair Creation");
+                
+                // Test public key properties
+                const pubKeyBytes = kp.public_key_bytes;
+                assert(pubKeyBytes instanceof Uint8Array, "Public key should be Uint8Array", "Public Key Type");
+                assert(pubKeyBytes.length === 32, "Public key must be 32 bytes", "Public Key Length");
+                
+                // Test private key properties
+                const privKeyBytes = kp.private_key_bytes;
+                assert(privKeyBytes instanceof Uint8Array, "Private key should be Uint8Array", "Private Key Type");
+                assert(privKeyBytes.length === 32, "Private key must be 32 bytes", "Private Key Length");
+                
+                // Test keypair bytes
+                const keypairBytes = kp.keypair_bytes;
+                assert(keypairBytes.length === 64, "Keypair bytes must be 64 bytes total", "Keypair Length");
+                
+                // Test hex representation
+                const pubKeyHex = kp.public_key_hex;
+                assert(typeof pubKeyHex === 'string', "Public key hex should be string", "Public Key Hex Type");
+                assert(pubKeyHex.length === 64, "Public key hex should be 64 characters", "Public Key Hex Length");
+                assert(/^[0-9a-f]+$/i.test(pubKeyHex), "Public key hex should contain only hex characters", "Public Key Hex Format");
+                
+                // Test key validation
+                assert(validate_public_key(pubKeyBytes), "Generated public key should be valid", "Public Key Validation");
+                
+                logOutput(`Generated keypair: ${pubKeyHex.substring(0, 16)}...`, 'info');
+                
+            } catch (error) {
+                assert(false, `Keypair generation failed: ${error.message}`, "Keypair Generation Error");
+            }
+        }
+
+        // Test 3: Invite Code System
+        async function testInviteCodeSystem() {
+            logOutput("Testing invite code generation and validation...", 'test');
+            
+            try {
+                // Test invite code generation
+                const invite = generate_invite_code();
+                assert(typeof invite === 'string', "Invite code should be string", "Invite Code Type");
+                assert(invite.length === 16, "Invite code should be 16 characters", "Invite Code Length");
+                assert(/^[A-Z0-9]+$/.test(invite), "Invite code should be base32 format", "Invite Code Format");
+                
+                // Test invite code validation
+                assert(validate_invite_code(invite), "Generated invite code should validate", "Invite Code Validation");
+                
+                // Test invalid invite codes
+                assert(!validate_invite_code(""), "Empty string should not validate", "Empty Invite Code");
+                assert(!validate_invite_code("short"), "Short code should not validate", "Short Invite Code");
+                assert(!validate_invite_code("toolongtobevalid123"), "Long code should not validate", "Long Invite Code");
+                assert(!validate_invite_code("invalid@#$%^&*()"), "Invalid characters should not validate", "Invalid Invite Code");
+                
+                // Test multiple generations are unique
+                const invite2 = generate_invite_code();
+                assert(invite !== invite2, "Multiple generations should produce different codes", "Invite Code Uniqueness");
+                
+                logOutput(`Generated invite codes: ${invite}, ${invite2}`, 'info');
+                
+            } catch (error) {
+                assert(false, `Invite code testing failed: ${error.message}`, "Invite Code Error");
+            }
+        }
+
+        // Test 4: Message Operations
+        async function testMessageOperations() {
+            logOutput("Testing message creation, signing, and verification...", 'test');
+            
+            try {
+                const alice = new WasmKeyPair();
+                const bob = new WasmKeyPair();
+                
+                // Test message creation
+                const msg = new WasmMessage(alice.public_key_bytes, bob.public_key_bytes, "Hello Bob!");
+                assert(msg !== null, "Message should be created successfully", "Message Creation");
+                assert(!msg.is_signed, "New message should not be signed initially", "Message Initial State");
+                
+                // Test message properties
+                assert(typeof msg.id === 'string', "Message ID should be string", "Message ID Type");
+                assert(msg.id.length > 0, "Message ID should not be empty", "Message ID Length");
+                assert(msg.content === "Hello Bob!", "Message content should match input", "Message Content");
+                assert(typeof msg.timestamp === 'string', "Message timestamp should be string", "Message Timestamp");
+                
+                // Test sender/recipient access
+                const senderHex = msg.sender_hex;
+                const recipientHex = msg.recipient_hex;
+                assert(typeof senderHex === 'string', "Sender hex should be string", "Sender Hex Type");
+                assert(typeof recipientHex === 'string', "Recipient hex should be string", "Recipient Hex Type");
+                assert(senderHex === alice.public_key_hex, "Sender should match Alice's key", "Sender Match");
+                assert(recipientHex === bob.public_key_hex, "Recipient should match Bob's key", "Recipient Match");
+                
+                // Test message signing
+                msg.sign(alice.keypair_bytes);
+                assert(msg.is_signed, "Message should be signed after signing", "Message Signing");
+                
+                // Test message verification
+                const verified = msg.verify(alice.public_key_bytes);
+                assert(verified, "Signed message should verify with correct key", "Message Verification");
+                
+                // Test verification with wrong key
+                const wrongVerify = msg.verify(bob.public_key_bytes);
+                assert(!wrongVerify, "Message should not verify with wrong key", "Wrong Key Verification");
+                
+                logOutput(`Message signed and verified: ${msg.id}`, 'info');
+                
+            } catch (error) {
+                assert(false, `Message operations failed: ${error.message}`, "Message Operations Error");
+            }
+        }
+
+        // Test 5: Cryptographic Verification
+        async function testCryptographicVerification() {
+            logOutput("Testing cryptographic operations and verification...", 'test');
+            
+            try {
+                const kp = new WasmKeyPair();
+                const testData = new TextEncoder().encode("Test message for signing");
+                
+                // Test signing
+                const signature = kp.sign(testData);
+                assert(signature instanceof Uint8Array, "Signature should be Uint8Array", "Signature Type");
+                assert(signature.length === 64, "Signature should be 64 bytes", "Signature Length");
+                assert(validate_signature(signature), "Generated signature should be valid", "Signature Validation");
+                
+                // Test verification
+                const isValid = verify_signature(kp.public_key_bytes, testData, signature);
+                assert(isValid, "Signature should verify with correct key and data", "Signature Verification");
+                
+                // Test with tampered data
+                const tamperedData = new TextEncoder().encode("Tampered message");
+                const tamperedValid = verify_signature(kp.public_key_bytes, tamperedData, signature);
+                assert(!tamperedValid, "Signature should not verify with tampered data", "Tampered Data Detection");
+                
+                // Test with wrong key
+                const wrongKp = new WasmKeyPair();
+                const wrongKeyValid = verify_signature(wrongKp.public_key_bytes, testData, signature);
+                assert(!wrongKeyValid, "Signature should not verify with wrong key", "Wrong Key Detection");
+                
+                logOutput("Cryptographic verification tests completed", 'info');
+                
+            } catch (error) {
+                assert(false, `Cryptographic verification failed: ${error.message}`, "Crypto Verification Error");
+            }
+        }
+
+        // Test 6: Error Handling and Edge Cases
+        async function testErrorHandling() {
+            logOutput("Testing error handling and edge cases...", 'test');
+            
+            try {
+                // Test invalid keypair creation
+                try {
+                    const invalidBytes = new Uint8Array(30); // Wrong length
+                    WasmKeyPair.from_bytes(invalidBytes);
+                    assert(false, "Should throw error for invalid keypair bytes", "Invalid Keypair Error");
+                } catch (e) {
+                    assert(true, "Correctly threw error for invalid keypair bytes", "Invalid Keypair Error Handling");
+                }
+                
+                // Test invalid hex conversion
+                try {
+                    hex_to_bytes("invalid_hex_string");
+                    assert(false, "Should throw error for invalid hex", "Invalid Hex Error");
+                } catch (e) {
+                    assert(true, "Correctly threw error for invalid hex", "Invalid Hex Error Handling");
+                }
+                
+                // Test message with invalid keys
+                try {
+                    const invalidKey = new Uint8Array(30); // Wrong length
+                    new WasmMessage(invalidKey, invalidKey, "test");
+                    assert(false, "Should throw error for invalid message keys", "Invalid Message Keys");
+                } catch (e) {
+                    assert(true, "Correctly threw error for invalid message keys", "Invalid Message Keys Error");
+                }
+                
+                // Test empty content handling
+                const kp = new WasmKeyPair();
+                const emptyMsg = new WasmMessage(kp.public_key_bytes, kp.public_key_bytes, "");
+                emptyMsg.sign(kp.keypair_bytes);
+                const emptyVerified = emptyMsg.verify(kp.public_key_bytes);
+                assert(emptyVerified, "Empty message should still sign and verify correctly", "Empty Message Handling");
+                
+                logOutput("Error handling tests completed", 'info');
+                
+            } catch (error) {
+                assert(false, `Error handling tests failed: ${error.message}`, "Error Handling Test Error");
+            }
+        }
+
+        // Test 7: Data Conversion and Validation
+        async function testDataConversion() {
+            logOutput("Testing data conversion and validation functions...", 'test');
+            
+            try {
+                // Test bytes to hex conversion
+                const testBytes = new Uint8Array([0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
+                const hex = bytes_to_hex(testBytes);
+                assert(hex === "0123456789abcdef", "Bytes to hex conversion should be correct", "Bytes to Hex");
+                
+                // Test hex to bytes conversion
+                const backToBytes = hex_to_bytes(hex);
+                assert(backToBytes.length === testBytes.length, "Hex to bytes length should match", "Hex to Bytes Length");
+                
+                let bytesMatch = true;
+                for (let i = 0; i < testBytes.length; i++) {
+                    if (testBytes[i] !== backToBytes[i]) {
+                        bytesMatch = false;
+                        break;
+                    }
+                }
+                assert(bytesMatch, "Hex to bytes conversion should be reversible", "Hex to Bytes Reversible");
+                
+                // Test validation functions
+                const kp = new WasmKeyPair();
+                assert(validate_public_key(kp.public_key_bytes), "Valid public key should validate", "Public Key Validation");
+                assert(!validate_public_key(new Uint8Array(30)), "Invalid public key should not validate", "Invalid Public Key");
+                
+                const signature = kp.sign(new TextEncoder().encode("test"));
+                assert(validate_signature(signature), "Valid signature should validate", "Signature Validation");
+                assert(!validate_signature(new Uint8Array(30)), "Invalid signature should not validate", "Invalid Signature");
+                
+                logOutput("Data conversion tests completed", 'info');
+                
+            } catch (error) {
+                assert(false, `Data conversion tests failed: ${error.message}`, "Data Conversion Error");
+            }
+        }
+
+        // Test 8: Security Features and Tampering Detection
+        async function testSecurityFeatures() {
+            logOutput("Testing security features and tampering detection...", 'test');
+            
+            try {
+                const alice = new WasmKeyPair();
+                const bob = new WasmKeyPair();
+                
+                // Create and sign a message
+                const originalMsg = new WasmMessage(alice.public_key_bytes, bob.public_key_bytes, "Original message");
+                originalMsg.sign(alice.keypair_bytes);
+                
+                // Test original verification
+                assert(originalMsg.verify(alice.public_key_bytes), "Original message should verify", "Original Message Verification");
+                
+                // Test content tampering detection
+                // Note: We can't directly modify the content after signing in the current implementation
+                // So we'll test by creating a new message with different content but trying to use the same signature approach
+                
+                const tamperedMsg = new WasmMessage(alice.public_key_bytes, bob.public_key_bytes, "Tampered message");
+                tamperedMsg.sign(alice.keypair_bytes);
+                
+                // These should have different signatures even with same keys
+                assert(originalMsg.verify(alice.public_key_bytes), "Original should still verify", "Original After Tampering");
+                assert(tamperedMsg.verify(alice.public_key_bytes), "Tampered (new) should verify with its own signature", "Tampered Message Verification");
+                
+                // Test cross-verification (should fail)
+                // We can't directly test this with current API, but we can test wrong key verification
+                assert(!originalMsg.verify(bob.public_key_bytes), "Message should not verify with wrong key", "Wrong Key Security");
+                
+                // Test replay attack prevention (different IDs)
+                assert(originalMsg.id !== tamperedMsg.id, "Different messages should have different IDs", "Replay Attack Prevention");
+                
+                // Test key isolation
+                const eveKp = new WasmKeyPair();
+                assert(!originalMsg.verify(eveKp.public_key_bytes), "Message should not verify with Eve's key", "Key Isolation");
+                
+                logOutput("Security feature tests completed", 'info');
+                
+            } catch (error) {
+                assert(false, `Security feature tests failed: ${error.message}`, "Security Feature Error");
+            }
+        }
+
+        // Stress test for performance and reliability
+        async function runStressTest() {
+            logOutput("🔥 Starting stress test...", 'test');
+            const startTime = Date.now();
+            
+            try {
+                const iterations = 100;
+                let successCount = 0;
+                
+                for (let i = 0; i < iterations; i++) {
+                    try {
+                        // Generate keypair
+                        const kp = new WasmKeyPair();
+                        
+                        // Generate invite code
+                        const invite = generate_invite_code();
+                        
+                        // Create and sign message
+                        const msg = new WasmMessage(kp.public_key_bytes, kp.public_key_bytes, `Stress test message ${i}`);
+                        msg.sign(kp.keypair_bytes);
+                        
+                        // Verify message
+                        const verified = msg.verify(kp.public_key_bytes);
+                        
+                        if (verified && validate_invite_code(invite)) {
+                            successCount++;
+                        }
+                        
+                        // Progress update every 20 iterations
+                        if (i % 20 === 0) {
+                            logOutput(`Stress test progress: ${i}/${iterations} (${successCount} successful)`, 'info');
+                        }
+                        
+                    } catch (error) {
+                        logOutput(`Stress test iteration ${i} failed: ${error.message}`, 'warning');
+                    }
+                }
+                
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                const successRate = (successCount / iterations * 100).toFixed(1);
+                
+                logOutput(`🎯 Stress test completed:
+- Iterations: ${iterations}
+- Successful: ${successCount}
+- Success rate: ${successRate}%
+- Duration: ${duration}ms
+- Average per operation: ${(duration / iterations).toFixed(2)}ms`, 'success');
+                
+                assert(successRate >= 95, `Stress test should have >95% success rate (got ${successRate}%)`, "Stress Test Success Rate");
+                
+            } catch (error) {
+                logOutput(`💥 Stress test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Make functions globally available
+        window.runAllTests = runAllTests;
+        window.clearOutput = clearOutput;
+        window.runStressTest = runStressTest;
+
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            logOutput("🌟 Defensive WASM Crypto Usage Demo Ready", 'info');
+            logOutput("Click 'Run All Tests' to start comprehensive testing", 'info');
+        });
+
+    </script>
+</body>
+</html>
