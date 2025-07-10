@@ -41,8 +41,8 @@ class ProofMessengerApp {
         try {
             console_log('Initializing Proof Messenger Web...');
             
-            // Initialize WASM module
-            await init();
+            // Initialize WASM module with explicit path
+            await init('../pkg/proof_messenger_web_bg.wasm');
             
             // Initialize event dispatcher
             this.eventDispatcher = new EventDispatcher();

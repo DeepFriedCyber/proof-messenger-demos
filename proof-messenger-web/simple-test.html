@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Simple WASM Test</title>
+</head>
+<body>
+    <h1>Simple WASM Loading Test</h1>
+    <div id="status">Loading...</div>
+    <div id="output"></div>
+
+    <script type="module">
+        async function test() {
+            const statusDiv = document.getElementById('status');
+            const outputDiv = document.getElementById('output');
+            
+            try {
+                statusDiv.textContent = 'Loading WASM module...';
+                
+                // Try different import methods
+                console.log('Attempting to import WASM module...');
+                
+                // Method 1: Import with explicit path
+                const wasmModule = await import('./pkg/proof_messenger_web.js');
+                console.log('WASM module imported:', wasmModule);
+                
+                statusDiv.textContent = 'Initializing WASM...';
+                
+                // Method 2: Initialize with explicit WASM path
+                await wasmModule.default('./pkg/proof_messenger_web_bg.wasm');
+                console.log('WASM initialized successfully');
+                
+                statusDiv.textContent = 'Testing WASM functions...';
+                
+                // Test a simple function
+                const inviteCode = wasmModule.generate_invite_code();
+                console.log('Generated invite code:', inviteCode);
+                
+                outputDiv.innerHTML = `
+                    <h2>✅ Success!</h2>
+                    <p><strong>Generated invite code:</strong> ${inviteCode}</p>
+                    <p><strong>Code length:</strong> ${inviteCode.length}</p>
+                    <p><strong>Valid format:</strong> ${wasmModule.validate_invite_code(inviteCode)}</p>
+                `;
+                
+                statusDiv.textContent = '✅ All tests passed!';
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                statusDiv.textContent = '❌ Test failed';
+                outputDiv.innerHTML = `
+                    <h2>❌ Error</h2>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Stack:</strong></p>
+                    <pre>${error.stack}</pre>
+                `;
+            }
+        }
+        
+        // Run test when page loads
+        test();
+    </script>
+</body>
+</html>
