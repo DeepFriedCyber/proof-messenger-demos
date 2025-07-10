@@ -1,0 +1,26 @@
+[package]
+name = "proof-messenger-protocol"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ed25519-dalek = "1.0.1"
+rand = "0.7"
+wasm-bindgen = { version = "0.2", optional = true }
+
+[dev-dependencies]
+proptest = "1.4"
+
+[features]
+default = []
+wasm = ["wasm-bindgen"]
+
+# Enable all features for docs.rs
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[[bench]]
+name = "crypto_benchmarks"
+harness = false
+

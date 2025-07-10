@@ -1,0 +1,1 @@
+C:\Users\aps33\Projects\Rust\ Protocol\target\debug\proof-messenger-cli.exe: C:\Users\aps33\Projects\Rust\ Protocol\proof-messenger-cli\src\main.rs C:\Users\aps33\Projects\Rust\ Protocol\proof-messenger-protocol\src\key.rs C:\Users\aps33\Projects\Rust\ Protocol\proof-messenger-protocol\src\lib.rs C:\Users\aps33\Projects\Rust\ Protocol\proof-messenger-protocol\src\proof.rs

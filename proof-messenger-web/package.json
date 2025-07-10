@@ -1,0 +1,14 @@
+{
+  "name": "proof-messenger-web",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "wasm-pack build --target web",
+    "start": "python -m http.server 8000 --directory www"
+  },
+  "devDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  }
+}

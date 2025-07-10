@@ -1,0 +1,12 @@
+[package]
+name = "proof-messenger-web"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+proof-messenger-protocol = { path = "../proof-messenger-protocol" }
+wasm-bindgen = "0.2"
+ed25519-dalek = "1.0.1"

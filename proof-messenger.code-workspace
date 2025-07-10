@@ -1,0 +1,146 @@
+{
+    "folders": [
+        {
+            "name": "Protocol Library",
+            "path": "./proof-messenger-protocol"
+        },
+        {
+            "name": "CLI Application",
+            "path": "./proof-messenger-cli"
+        },
+        {
+            "name": "Web Application",
+            "path": "./proof-messenger-web"
+        },
+        {
+            "name": "Relay Server",
+            "path": "./proof-messenger-relay"
+        }
+    ],
+    "settings": {
+        "rust-analyzer.linkedProjects": [
+            "./proof-messenger-protocol/Cargo.toml",
+            "./proof-messenger-cli/Cargo.toml",
+            "./proof-messenger-web/Cargo.toml",
+            "./proof-messenger-relay/Cargo.toml"
+        ],
+        "rust-analyzer.cargo.buildScripts.enable": true,
+        "rust-analyzer.procMacro.enable": true,
+        "files.exclude": {
+            "**/target": true,
+            "**/node_modules": true,
+            "**/.git": true
+        },
+        "search.exclude": {
+            "**/target": true,
+            "**/node_modules": true
+        }
+    },
+    "extensions": {
+        "recommendations": [
+            "rust-lang.rust-analyzer",
+            "vadimcn.vscode-lldb",
+            "serayuzgur.crates",
+            "tamasfe.even-better-toml",
+            "ms-vscode.vscode-typescript-next",
+            "bradlc.vscode-tailwindcss"
+        ]
+    },
+    "tasks": {
+        "version": "2.0.0",
+        "tasks": [
+            {
+                "label": "Build All Projects",
+                "type": "shell",
+                "command": "cargo",
+                "args": ["build"],
+                "group": "build",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                },
+                "options": {
+                    "cwd": "${workspaceFolder:Protocol Library}"
+                }
+            },
+            {
+                "label": "Test All Projects",
+                "type": "shell",
+                "command": "cargo",
+                "args": ["test"],
+                "group": "test",
+                "presentation": {
+                    "echo": true,
+                    "reveal": "always",
+                    "focus": false,
+                    "panel": "shared"
+                }
+            },
+            {
+                "label": "Run CLI",
+                "type": "shell",
+                "command": "cargo",
+                "args": ["run"],
+                "group": "build",
+                "options": {
+                    "cwd": "${workspaceFolder:CLI Application}"
+                }
+            },
+            {
+                "label": "Run Relay Server",
+                "type": "shell",
+                "command": "cargo",
+                "args": ["run"],
+                "group": "build",
+                "options": {
+                    "cwd": "${workspaceFolder:Relay Server}"
+                }
+            },
+            {
+                "label": "Build WASM",
+                "type": "shell",
+                "command": "wasm-pack",
+                "args": ["build", "--target", "web"],
+                "group": "build",
+                "options": {
+                    "cwd": "${workspaceFolder:Web Application}"
+                }
+            }
+        ]
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "type": "lldb",
+                "request": "launch",
+                "name": "Debug CLI",
+                "cargo": {
+                    "args": ["build", "--bin=proof-messenger-cli"],
+                    "filter": {
+                        "name": "proof-messenger-cli",
+                        "kind": "bin"
+                    }
+                },
+                "args": [],
+                "cwd": "${workspaceFolder:CLI Application}"
+            },
+            {
+                "type": "lldb",
+                "request": "launch",
+                "name": "Debug Relay Server",
+                "cargo": {
+                    "args": ["build", "--bin=proof-messenger-relay"],
+                    "filter": {
+                        "name": "proof-messenger-relay",
+                        "kind": "bin"
+                    }
+                },
+                "args": [],
+                "cwd": "${workspaceFolder:Relay Server}"
+            }
+        ]
+    }
+}

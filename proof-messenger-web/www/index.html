@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>🔐 Proof Messenger</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔐</text></svg>">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <span class="me-2">🔐</span>
+                Proof Messenger
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-tab="onboard">Onboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-tab="messages">Messages</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-tab="identity">Identity</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-tab="demo">Demo</a>
+                    </li>
+                </ul>
+                <div class="navbar-nav">
+                    <span class="navbar-text" id="connection-status">
+                        <span class="badge bg-secondary">Disconnected</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Loading Indicator -->
+        <div id="loading" class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading WASM...</span>
+            </div>
+            <p class="mt-2">Initializing cryptographic modules...</p>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="error-alert" class="alert alert-danger d-none" role="alert">
+            <h4 class="alert-heading">Error!</h4>
+            <p id="error-message"></p>
+        </div>
+
+        <!-- Success Alert -->
+        <div id="success-alert" class="alert alert-success d-none" role="alert">
+            <p id="success-message"></p>
+        </div>
+
+        <!-- Onboarding Tab -->
+        <div id="tab-onboard" class="tab-content">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">🎫 Join with Invitation</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="onboard-form">
+                                <div class="mb-3">
+                                    <label for="invite-code" class="form-label">Invitation Code</label>
+                                    <input type="text" class="form-control" id="invite-code" 
+                                           placeholder="ABC12345" maxlength="8" required>
+                                    <div class="form-text">Enter the 8-character invitation code</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="display-name" class="form-label">Display Name</label>
+                                    <input type="text" class="form-control" id="display-name" 
+                                           placeholder="Your Name" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="spinner-border spinner-border-sm d-none" id="onboard-spinner"></span>
+                                    Join Network
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">🔑 Generate Identity</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Don't have an invitation? Generate a new identity to get started.</p>
+                            <button id="generate-identity" class="btn btn-outline-primary">
+                                Generate New Identity
+                            </button>
+                            <div id="identity-info" class="mt-3 d-none">
+                                <div class="alert alert-info">
+                                    <strong>Identity Generated!</strong><br>
+                                    Public Key: <code id="generated-public-key"></code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Tab -->
+        <div id="tab-messages" class="tab-content d-none">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">📬 Messages</h5>
+                            <button class="btn btn-sm btn-outline-primary" id="refresh-messages">
+                                <span id="refresh-icon">🔄</span>
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="message-list" class="list-group list-group-flush">
+                                <div class="list-group-item text-center text-muted">
+                                    No messages yet
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">✉️ Compose Message</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="send-message-form">
+                                <div class="mb-3">
+                                    <label for="recipient-key" class="form-label">Recipient Public Key</label>
+                                    <input type="text" class="form-control" id="recipient-key" 
+                                           placeholder="64-character hex public key" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="message-content" class="form-label">Message</label>
+                                    <textarea class="form-control" id="message-content" rows="3" 
+                                              placeholder="Your secure message..." required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="attach-identity-proof">
+                                        <label class="form-check-label" for="attach-identity-proof">
+                                            Attach identity proof
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="require-receipt">
+                                        <label class="form-check-label" for="require-receipt">
+                                            Require read receipt
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="message-priority" class="form-label">Priority</label>
+                                    <select class="form-select" id="message-priority">
+                                        <option value="normal" selected>Normal</option>
+                                        <option value="low">Low</option>
+                                        <option value="high">High</option>
+                                        <option value="urgent">Urgent</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="spinner-border spinner-border-sm d-none" id="send-spinner"></span>
+                                    Send Message
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Message Details -->
+                    <div id="message-details" class="card mt-3 d-none">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">📄 Message Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="message-content-display"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Identity Tab -->
+        <div id="tab-identity" class="tab-content d-none">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">👤 Your Identity</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="identity-display">
+                                <p class="text-muted">No identity loaded</p>
+                            </div>
+                            <div class="mt-3">
+                                <button id="export-identity" class="btn btn-outline-primary me-2">
+                                    Export Public Key
+                                </button>
+                                <button id="create-invitation" class="btn btn-outline-success">
+                                    Create Invitation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">🎫 Your Invitations</h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="invitations-list">
+                                <p class="text-muted">No invitations created</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demo Tab -->
+        <div id="tab-demo" class="tab-content d-none">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">🚀 Protocol Demo</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Demonstrate the proof messenger protocol with interactive examples.</p>
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <button id="demo-e2e" class="btn btn-primary w-100 mb-2">
+                                        End-to-End Demo
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button id="demo-benchmark" class="btn btn-outline-primary w-100 mb-2">
+                                        Crypto Benchmark
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button id="demo-proofs" class="btn btn-outline-primary w-100 mb-2">
+                                        Proof Verification
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="demo-output" class="mt-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="card-title mb-0">Demo Output</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <pre id="demo-log" class="bg-dark text-light p-3 rounded" style="height: 300px; overflow-y: auto;">
+Ready to run demos...
+                                        </pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    
+    <!-- Main Application -->
+    <script type="module" src="index.js"></script>
+</body>
+</html>
