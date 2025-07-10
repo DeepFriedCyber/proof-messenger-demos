@@ -95,22 +95,24 @@ pub fn verify_proof_wasm(pubkey_bytes: &[u8], context: &[u8], proof_bytes: &[u8]
     Ok(pubkey.verify(context, &signature).is_ok())
 }
 
-/// Validate invitation code format
+/// Validate invitation code format (16-character base32)
 #[wasm_bindgen]
 pub fn validate_invite_code(code: &str) -> bool {
-    code.len() == 8 && code.chars().all(|c| c.is_ascii_alphanumeric())
+    code.len() == 16 && code.chars().all(|c| c.is_ascii_alphanumeric())
 }
 
-/// Generate a random invitation code
+// D. Invite/Proof Functions
+/// Generate a cryptographically secure 16-character base32 invite code
 #[wasm_bindgen]
 pub fn generate_invite_code() -> Result<String, JsValue> {
-    use rand::Rng;
-    let mut rng = OsRng;
-    let chars: Vec<char> = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".chars().collect();
-    if chars.is_empty() {
-        return Err(JsValue::from_str("Character set is empty"));
+    use rand::RngCore;
+    let mut buf = [0u8; 10];
+    OsRng.fill_bytes(&mut buf);
+    
+    match base32::encode(base32::Alphabet::RFC4648 { padding: false }, &buf).get(..16) {
+        Some(code) => Ok(code.to_string()),
+        None => Err(JsValue::from_str("Failed to generate invite code"))
     }
-    Ok((0..8).map(|_| chars[rng.gen_range(0, chars.len())]).collect())
 }
 
 /// Verify a signature with separate public key
@@ -133,34 +135,32 @@ pub fn validate_signature(signature_bytes: &[u8]) -> bool {
     Signature::from_bytes(signature_bytes).is_ok()
 }
 
-// Message structure for WASM
+// E. Message and Proof Classes
 #[derive(Serialize, Deserialize, Clone)]
 #[wasm_bindgen]
 pub struct WasmMessage {
-    id: String,
-    sender_hex: String,
-    recipient_hex: String,
+    sender: Vec<u8>,
+    recipient: Vec<u8>,
     content: String,
+    proof: Option<Vec<u8>>,
+    id: String,
     timestamp: String,
-    signature: Option<Vec<u8>>,
-    is_signed: bool,
 }
 
 #[wasm_bindgen]
 impl WasmMessage {
     #[wasm_bindgen(constructor)]
-    pub fn new(sender_bytes: &[u8], recipient_bytes: &[u8], content: &str) -> WasmMessage {
-        let id = format!("msg_{}", js_sys::Date::now() as u64);
+    pub fn new(sender: &[u8], recipient: &[u8], content: &str) -> WasmMessage {
+        let id = uuid::Uuid::new_v4().to_string();
         let timestamp = js_sys::Date::new_0().to_iso_string().as_string().unwrap();
         
         WasmMessage {
-            id,
-            sender_hex: hex::encode(sender_bytes),
-            recipient_hex: hex::encode(recipient_bytes),
+            sender: sender.to_vec(),
+            recipient: recipient.to_vec(),
             content: content.to_string(),
+            proof: None,
+            id,
             timestamp,
-            signature: None,
-            is_signed: false,
         }
     }
     
@@ -171,12 +171,22 @@ impl WasmMessage {
     
     #[wasm_bindgen(getter)]
     pub fn sender_hex(&self) -> String {
-        self.sender_hex.clone()
+        hex::encode(&self.sender)
     }
     
     #[wasm_bindgen(getter)]
     pub fn recipient_hex(&self) -> String {
-        self.recipient_hex.clone()
+        hex::encode(&self.recipient)
+    }
+    
+    #[wasm_bindgen(getter)]
+    pub fn sender_bytes(&self) -> Vec<u8> {
+        self.sender.clone()
+    }
+    
+    #[wasm_bindgen(getter)]
+    pub fn recipient_bytes(&self) -> Vec<u8> {
+        self.recipient.clone()
     }
     
     #[wasm_bindgen(getter)]
@@ -191,31 +201,39 @@ impl WasmMessage {
     
     #[wasm_bindgen(getter)]
     pub fn is_signed(&self) -> bool {
-        self.is_signed
+        self.proof.is_some()
     }
     
     pub fn sign(&mut self, keypair_bytes: &[u8]) -> Result<(), JsValue> {
-        if keypair_bytes.len() != SECRET_KEY_LENGTH + PUBLIC_KEY_LENGTH {
-            return Err(JsValue::from_str("Invalid keypair length"));
-        }
-        
-        let privkey_bytes = &keypair_bytes[..SECRET_KEY_LENGTH];
-        let message_data = format!("{}:{}:{}", self.sender_hex, self.recipient_hex, self.content);
-        
-        let secret = ed25519_dalek::SecretKey::from_bytes(privkey_bytes)
+        let secret = SecretKey::from_bytes(&keypair_bytes[0..SECRET_KEY_LENGTH])
             .map_err(|e| JsValue::from_str(&format!("SecretKey error: {e}")))?;
-        let public = ed25519_dalek::PublicKey::from(&secret);
+        let public = PublicKey::from_bytes(&keypair_bytes[SECRET_KEY_LENGTH..])
+            .map_err(|e| JsValue::from_str(&format!("PublicKey error: {e}")))?;
         let keypair = Keypair { secret, public };
-        let sig = keypair.sign(message_data.as_bytes());
-        self.signature = Some(sig.to_bytes().to_vec());
-        self.is_signed = true;
+        
+        // Create message to sign: sender + recipient + content
+        let mut to_sign = self.sender.clone();
+        to_sign.extend(&self.recipient);
+        to_sign.extend(self.content.as_bytes());
+        
+        self.proof = Some(keypair.sign(&to_sign).to_bytes().to_vec());
         Ok(())
     }
     
     pub fn verify(&self, pubkey_bytes: &[u8]) -> Result<bool, JsValue> {
-        if let Some(ref sig_bytes) = self.signature {
-            let message_data = format!("{}:{}:{}", self.sender_hex, self.recipient_hex, self.content);
-            verify_proof_wasm(pubkey_bytes, message_data.as_bytes(), sig_bytes)
+        if let Some(ref sig) = self.proof {
+            let public = PublicKey::from_bytes(pubkey_bytes)
+                .map_err(|e| JsValue::from_str(&format!("PublicKey error: {e}")))?;
+            
+            // Reconstruct message to verify: sender + recipient + content
+            let mut to_sign = self.sender.clone();
+            to_sign.extend(&self.recipient);
+            to_sign.extend(self.content.as_bytes());
+            
+            let signature = Signature::from_bytes(sig)
+                .map_err(|e| JsValue::from_str(&format!("Signature error: {e}")))?;
+            
+            Ok(public.verify(&to_sign, &signature).is_ok())
         } else {
             Ok(false)
         }
@@ -467,5 +485,165 @@ impl RelayConnection {
         } else {
             web_sys::WebSocket::CLOSED
         }
+    }
+}
+
+// F. TDD/Property-Based Testing Example (Rust, not WASM)
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proptest::prelude::*;
+    
+    proptest! {
+        #[test]
+        fn proof_verifies_for_random_content(seed in any::<u64>()) {
+            use rand::SeedableRng;
+            let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+            let kp = Keypair::generate(&mut rng);
+            let data = format!("context-{seed}").into_bytes();
+            let sig = kp.sign(&data);
+            prop_assert!(kp.public.verify(&data, &sig).is_ok());
+        }
+        
+        #[test]
+        fn proof_fails_for_modified_content(seed in any::<u64>()) {
+            use rand::SeedableRng;
+            let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+            let kp = Keypair::generate(&mut rng);
+            let mut data = format!("context-{seed}").into_bytes();
+            let sig = kp.sign(&data);
+            data.push(0xFF); // tamper
+            prop_assert!(!kp.public.verify(&data, &sig).is_ok());
+        }
+        
+        #[test]
+        fn keypair_roundtrip_preserves_keys(seed in any::<u64>()) {
+            use rand::SeedableRng;
+            let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+            let kp1 = Keypair::generate(&mut rng);
+            
+            let mut bytes = Vec::new();
+            bytes.extend_from_slice(&kp1.secret.to_bytes());
+            bytes.extend_from_slice(&kp1.public.to_bytes());
+            
+            let secret = SecretKey::from_bytes(&bytes[0..SECRET_KEY_LENGTH]).unwrap();
+            let public = PublicKey::from_bytes(&bytes[SECRET_KEY_LENGTH..]).unwrap();
+            let kp2 = Keypair { secret, public };
+            
+            prop_assert_eq!(kp1.public.to_bytes(), kp2.public.to_bytes());
+            prop_assert_eq!(kp1.secret.to_bytes(), kp2.secret.to_bytes());
+        }
+        
+        #[test]
+        fn message_signing_is_deterministic(
+            content in ".*",
+            seed in any::<u64>()
+        ) {
+            use rand::SeedableRng;
+            let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+            let kp = Keypair::generate(&mut rng);
+            
+            let sender = kp.public.to_bytes().to_vec();
+            let recipient = kp.public.to_bytes().to_vec(); // Self-message for test
+            
+            // Create messages manually for testing (avoiding js-sys::Date)
+            let mut msg1 = WasmMessage {
+                sender: sender.clone(),
+                recipient: recipient.clone(),
+                content: content.clone(),
+                proof: None,
+                id: "test-id-1".to_string(),
+                timestamp: "2024-01-01T00:00:00.000Z".to_string(),
+            };
+            let mut msg2 = WasmMessage {
+                sender: sender.clone(),
+                recipient: recipient.clone(),
+                content: content.clone(),
+                proof: None,
+                id: "test-id-2".to_string(),
+                timestamp: "2024-01-01T00:00:00.000Z".to_string(),
+            };
+            
+            let keypair_bytes = {
+                let mut bytes = Vec::new();
+                bytes.extend_from_slice(&kp.secret.to_bytes());
+                bytes.extend_from_slice(&kp.public.to_bytes());
+                bytes
+            };
+            
+            msg1.sign(&keypair_bytes).unwrap();
+            msg2.sign(&keypair_bytes).unwrap();
+            
+            // Same message should produce same signature
+            prop_assert_eq!(msg1.proof, msg2.proof);
+        }
+        
+        #[test]
+        fn hex_conversion_roundtrip(bytes in prop::collection::vec(any::<u8>(), 0..1000)) {
+            let hex = hex::encode(&bytes);
+            let decoded = hex::decode(&hex).unwrap();
+            prop_assert_eq!(bytes, decoded);
+        }
+        
+        #[test]
+        fn invite_code_validation_works(seed in any::<u64>()) {
+            use rand::RngCore;
+            use rand::SeedableRng;
+            let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+            let mut buf = [0u8; 10];
+            rng.fill_bytes(&mut buf);
+            
+            let code = base32::encode(base32::Alphabet::RFC4648 { padding: false }, &buf);
+            let code16 = &code[..16];
+            
+            prop_assert!(validate_invite_code(code16));
+            prop_assert!(!validate_invite_code("invalid"));
+            prop_assert!(!validate_invite_code(&code[..15])); // Too short
+        }
+    }
+    
+    #[test]
+    fn test_basic_keypair_operations() {
+        let kp = WasmKeyPair::new();
+        assert_eq!(kp.public_key_bytes().len(), PUBLIC_KEY_LENGTH);
+        assert_eq!(kp.private_key_bytes().len(), SECRET_KEY_LENGTH);
+        assert_eq!(kp.keypair_bytes().len(), SECRET_KEY_LENGTH + PUBLIC_KEY_LENGTH);
+        
+        // Test signing
+        let data = b"test message";
+        let signature = kp.sign(data).unwrap();
+        assert_eq!(signature.len(), 64);
+        
+        // Test verification
+        let valid = verify_signature(&kp.public_key_bytes(), data, &signature).unwrap();
+        assert!(valid);
+    }
+    
+    #[test]
+    fn test_message_operations() {
+        let alice = WasmKeyPair::new();
+        let bob = WasmKeyPair::new();
+        
+        // Create message manually for testing (avoiding js-sys::Date)
+        let mut message = WasmMessage {
+            sender: alice.public_key_bytes(),
+            recipient: bob.public_key_bytes(),
+            content: "Hello Bob!".to_string(),
+            proof: None,
+            id: "test-id".to_string(),
+            timestamp: "2024-01-01T00:00:00.000Z".to_string(),
+        };
+        
+        assert!(!message.is_signed());
+        
+        message.sign(&alice.keypair_bytes()).unwrap();
+        assert!(message.is_signed());
+        
+        let valid = message.verify(&alice.public_key_bytes()).unwrap();
+        assert!(valid);
+        
+        // Wrong key should fail
+        let invalid = message.verify(&bob.public_key_bytes()).unwrap();
+        assert!(!invalid);
     }
 }
