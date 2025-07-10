@@ -38,11 +38,16 @@
 
 pub mod key;
 pub mod proof;
+pub mod errors;
+
+// Property-based tests for proof error handling
+#[cfg(test)]
+mod proof_property_tests;
+
 // Add more as your protocol evolves (message, group, recovery, etc.)
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     #[test]
     fn test_basic_functionality() {

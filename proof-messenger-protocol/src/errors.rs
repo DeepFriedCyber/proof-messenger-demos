@@ -53,13 +53,7 @@ pub enum ProtocolError {
     /// This error occurs when converting data to/from various formats
     /// such as JSON, binary, or other serialization formats.
     #[error("Serialization error: {0}")]
-    Serialization(#[from] serde_json::Error),
-    
-    /// Binary serialization error
-    ///
-    /// This error occurs specifically with binary serialization operations.
-    #[error("Binary serialization error: {0}")]
-    BinarySerialization(#[from] bincode::Error),
+    Serialization(String),
     
     /// Invalid protocol state
     ///
@@ -200,9 +194,11 @@ mod tests {
     }
 
     #[test]
-    fn test_json_error_conversion() {
-        let json_err = serde_json::Error::syntax(serde_json::error::ErrorCode::EofWhileParsingValue, 0, 0);
-        let protocol_err: ProtocolError = json_err.into();
-        assert!(matches!(protocol_err, ProtocolError::Serialization(_)));
+    fn test_serialization_error_creation() {
+        let err = ProtocolError::Serialization("Test serialization error".to_string());
+        assert!(matches!(err, ProtocolError::Serialization(_)));
+        let display = format!("{}", err);
+        assert!(display.contains("Serialization error"));
+        assert!(display.contains("Test serialization error"));
     }
 }
