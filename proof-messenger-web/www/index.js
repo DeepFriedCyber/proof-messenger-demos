@@ -3,14 +3,17 @@ import init, {
     WasmKeyPair,
     WasmMessage,
     WasmProof,
-    WasmProofVerifier,
     RelayConnection,
     LocalStorage,
     Utils,
     EventDispatcher,
     console_log,
     console_warn,
-    console_error
+    console_error,
+    validate_invite_code,
+    generate_invite_code,
+    bytes_to_hex,
+    hex_to_bytes
 } from '../pkg/proof_messenger_web.js';
 
 class ProofMessengerApp {
@@ -134,7 +137,7 @@ class ProofMessengerApp {
         const displayName = document.getElementById('display-name').value.trim();
         const spinner = document.getElementById('onboard-spinner');
         
-        if (!Utils.validate_invite_code(inviteCode)) {
+        if (!validate_invite_code(inviteCode)) {
             this.showError('Invalid invitation code format. Must be 8 alphanumeric characters.');
             return;
         }
@@ -217,7 +220,7 @@ class ProofMessengerApp {
                 throw new Error('Recipient public key must be 64 characters');
             }
             
-            const recipientBytes = this.hexToBytes(recipientKey);
+            const recipientBytes = hex_to_bytes(recipientKey);
             
             // Create message
             const message = new WasmMessage(

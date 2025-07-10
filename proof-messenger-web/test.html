@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>🔐 Proof Messenger - Test</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>🔐 Proof Messenger - WASM Test</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Test WASM Functions</h5>
+                    </div>
+                    <div class="card-body">
+                        <button id="test-keypair" class="btn btn-primary mb-2">Generate Keypair</button>
+                        <button id="test-invite" class="btn btn-secondary mb-2">Generate Invite Code</button>
+                        <button id="test-message" class="btn btn-success mb-2">Create Message</button>
+                        <button id="test-proof" class="btn btn-warning mb-2">Create Proof</button>
+                        
+                        <div id="output" class="mt-3">
+                            <h6>Output:</h6>
+                            <pre id="log" class="bg-dark text-light p-3 rounded" style="height: 300px; overflow-y: auto;">
+Ready to test WASM functions...
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import init, {
+            WasmKeyPair,
+            WasmMessage,
+            WasmProof,
+            console_log,
+            validate_invite_code,
+            generate_invite_code,
+            bytes_to_hex
+        } from './pkg/proof_messenger_web.js';
+
+        let logElement;
+
+        function log(message) {
+            console.log(message);
+            if (logElement) {
+                logElement.textContent += message + '\n';
+                logElement.scrollTop = logElement.scrollHeight;
+            }
+        }
+
+        async function main() {
+            try {
+                log('Initializing WASM module...');
+                await init();
+                log('✅ WASM module initialized successfully!');
+
+                logElement = document.getElementById('log');
+                
+                // Test keypair generation
+                document.getElementById('test-keypair').addEventListener('click', () => {
+                    try {
+                        log('\n🔑 Testing keypair generation...');
+                        const keypair = new WasmKeyPair();
+                        log('✅ Keypair generated successfully!');
+                        log('Public key: ' + keypair.public_key_hex);
+                        log('Public key length: ' + keypair.public_key_hex.length);
+                    } catch (error) {
+                        log('❌ Keypair generation failed: ' + error);
+                    }
+                });
+
+                // Test invite code generation
+                document.getElementById('test-invite').addEventListener('click', () => {
+                    try {
+                        log('\n🎫 Testing invite code generation...');
+                        const inviteCode = generate_invite_code();
+                        log('✅ Invite code generated: ' + inviteCode);
+                        log('Valid format: ' + validate_invite_code(inviteCode));
+                    } catch (error) {
+                        log('❌ Invite code generation failed: ' + error);
+                    }
+                });
+
+                // Test message creation
+                document.getElementById('test-message').addEventListener('click', () => {
+                    try {
+                        log('\n✉️ Testing message creation...');
+                        const keypair1 = new WasmKeyPair();
+                        const keypair2 = new WasmKeyPair();
+                        
+                        const message = new WasmMessage(
+                            keypair1.public_key_bytes,
+                            keypair2.public_key_bytes,
+                            'Hello from WASM!'
+                        );
+                        
+                        log('✅ Message created successfully!');
+                        log('Message ID: ' + message.id);
+                        log('From: ' + message.sender_hex);
+                        log('To: ' + message.recipient_hex);
+                        log('Content: ' + message.content);
+                        
+                        // Test signing
+                        message.sign(keypair1.keypair_bytes);
+                        log('✅ Message signed: ' + message.is_signed);
+                        
+                        // Test verification
+                        const verified = message.verify(keypair1.public_key_bytes);
+                        log('✅ Message verification: ' + verified);
+                        
+                    } catch (error) {
+                        log('❌ Message creation failed: ' + error);
+                    }
+                });
+
+                // Test proof creation
+                document.getElementById('test-proof').addEventListener('click', () => {
+                    try {
+                        log('\n🛡️ Testing proof creation...');
+                        const keypair = new WasmKeyPair();
+                        const context = new TextEncoder().encode('test context data');
+                        
+                        const proof = new WasmProof('identity', context);
+                        log('✅ Proof created: ' + proof.id);
+                        
+                        proof.sign(keypair);
+                        log('✅ Proof signed successfully!');
+                        
+                        const verified = proof.verify();
+                        log('✅ Proof verification: ' + verified);
+                        
+                    } catch (error) {
+                        log('❌ Proof creation failed: ' + error);
+                    }
+                });
+
+                log('\n🚀 All test buttons are ready!');
+                
+            } catch (error) {
+                log('❌ Failed to initialize: ' + error);
+            }
+        }
+
+        main();
+    </script>
+</body>
+</html>
