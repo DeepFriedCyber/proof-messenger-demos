@@ -457,7 +457,7 @@ class ProofMessengerApp {
         }
         
         try {
-            const inviteCode = Utils.random_string(8).toUpperCase();
+            const inviteCode = generate_invite_code();
             const invitation = {
                 id: crypto.randomUUID(),
                 code: inviteCode,
@@ -542,11 +542,11 @@ class ProofMessengerApp {
             
             // Bob verifies message
             this.logDemo('4. Bob verifies the message...');
-            const sigValid = message.verify_signature();
+            const sigValid = message.verify(aliceKeypair.public_key_bytes);
             this.logDemo(`   Signature: ${sigValid ? '✅ Valid' : '❌ Invalid'}`);
             
             // Verify proof
-            const proofValid = WasmProofVerifier.verify(aliceProof);
+            const proofValid = aliceProof.verify();
             this.logDemo(`   Identity proof: ${proofValid ? '✅ Valid' : '❌ Invalid'}`);
             
             this.logDemo('🎉 End-to-end demo completed successfully!');
@@ -587,11 +587,17 @@ class ProofMessengerApp {
             // Verification benchmark
             this.logDemo('3. Signature verification benchmark...');
             const signature = keypair.sign(testData);
-            const publicKey = new WasmPublicKey(keypair.public_key_bytes);
             
             const verifyStart = performance.now();
             for (let i = 0; i < 100; i++) {
-                publicKey.verify(testData, signature);
+                // Create a message and verify it
+                const testMessage = new WasmMessage(
+                    keypair.public_key_bytes,
+                    keypair.public_key_bytes,
+                    'test'
+                );
+                testMessage.sign(keypair.keypair_bytes);
+                testMessage.verify(keypair.public_key_bytes);
             }
             const verifyTime = performance.now() - verifyStart;
             this.logDemo(`   100 verifications: ${verifyTime.toFixed(2)}ms (${(verifyTime*10).toFixed(2)}μs/verification)`);
@@ -622,7 +628,7 @@ class ProofMessengerApp {
                 const proof = new WasmProof(proofType, testData);
                 proof.sign(keypair);
                 
-                const isValid = WasmProofVerifier.verify(proof);
+                const isValid = proof.verify();
                 this.logDemo(`   ${proofType} proof: ${isValid ? '✅ Valid' : '❌ Invalid'}`);
             }
             
@@ -635,7 +641,7 @@ class ProofMessengerApp {
             const tamperedData = new TextEncoder().encode('tampered data');
             const newTamperedProof = new WasmProof('message', tamperedData);
             
-            const tamperedValid = WasmProofVerifier.verify(newTamperedProof);
+            const tamperedValid = newTamperedProof.verify();
             this.logDemo(`   Tampered proof: ${tamperedValid ? '❌ Incorrectly valid' : '✅ Correctly invalid'}`);
             
             this.logDemo('🔍 Proof verification demo completed!');
@@ -653,7 +659,7 @@ class ProofMessengerApp {
             const displayNameData = LocalStorage.load('display_name');
             
             if (identityData && displayNameData) {
-                const keyBytes = this.hexToBytes(identityData);
+                const keyBytes = hex_to_bytes(identityData);
                 this.keypair = WasmKeyPair.from_bytes(keyBytes);
                 this.displayName = displayNameData;
                 console_log('Loaded saved identity');
@@ -672,7 +678,7 @@ class ProofMessengerApp {
     
     async saveIdentity() {
         try {
-            await LocalStorage.save('identity', this.keypair.private_key_bytes.map(b => b.toString(16).padStart(2, '0')).join(''));
+            await LocalStorage.save('identity', bytes_to_hex(this.keypair.private_key_bytes));
             await LocalStorage.save('display_name', this.displayName);
             console_log('Identity saved to local storage');
         } catch (error) {
@@ -688,8 +694,8 @@ class ProofMessengerApp {
             
             const messageData = {
                 id: message.id,
-                sender_hex: this.bytesToHex(message.sender_bytes),
-                recipient_hex: this.bytesToHex(message.recipient_bytes),
+                sender_hex: message.sender_hex,
+                recipient_hex: message.recipient_hex,
                 content: message.content,
                 timestamp: message.timestamp,
                 is_signed: message.is_signed

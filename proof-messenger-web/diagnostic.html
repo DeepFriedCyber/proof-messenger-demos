@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>🔧 Diagnostic Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Proof Messenger - Diagnostic Test</h1>
+    
+    <div id="status">
+        <h2>Connection Status:</h2>
+        <p class="success">✅ HTML loaded successfully!</p>
+        <p class="success">✅ HTTP server is working!</p>
+    </div>
+    
+    <div id="browser-info">
+        <h2>Browser Information:</h2>
+        <pre id="browser-details"></pre>
+    </div>
+    
+    <div id="wasm-test">
+        <h2>WASM Loading Test:</h2>
+        <p id="wasm-status" class="info">🔄 Testing WASM support...</p>
+        <button onclick="testWasm()">Test WASM Loading</button>
+    </div>
+    
+    <div id="links">
+        <h2>Navigation Links:</h2>
+        <p><a href="/">🏠 Main Page</a></p>
+        <p><a href="/test.html">🧪 WASM Test Page</a></p>
+        <p><a href="/www/index.html">💬 Full Web App</a></p>
+    </div>
+
+    <script>
+        // Display browser info
+        document.getElementById('browser-details').textContent = 
+            `User Agent: ${navigator.userAgent}\n` +
+            `Platform: ${navigator.platform}\n` +
+            `Language: ${navigator.language}\n` +
+            `WebAssembly Support: ${typeof WebAssembly !== 'undefined' ? 'Yes' : 'No'}\n` +
+            `Current URL: ${window.location.href}`;
+
+        // Test WASM loading
+        async function testWasm() {
+            const statusEl = document.getElementById('wasm-status');
+            
+            try {
+                statusEl.innerHTML = '<span class="info">🔄 Loading WASM module...</span>';
+                
+                // Try to load the WASM module
+                const wasmModule = await import('./pkg/proof_messenger_web.js');
+                await wasmModule.default();
+                
+                statusEl.innerHTML = '<span class="success">✅ WASM module loaded successfully!</span>';
+                
+                // Test a simple function
+                try {
+                    const inviteCode = wasmModule.generate_invite_code();
+                    statusEl.innerHTML += '<br><span class="success">✅ WASM functions working! Generated invite: ' + inviteCode + '</span>';
+                } catch (funcError) {
+                    statusEl.innerHTML += '<br><span class="error">❌ WASM function error: ' + funcError.message + '</span>';
+                }
+                
+            } catch (error) {
+                statusEl.innerHTML = '<span class="error">❌ WASM loading failed: ' + error.message + '</span>';
+                console.error('WASM Error:', error);
+            }
+        }
+
+        // Auto-test WASM on page load
+        window.addEventListener('load', () => {
+            setTimeout(testWasm, 1000);
+        });
+    </script>
+</body>
+</html>
