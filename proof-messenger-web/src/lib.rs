@@ -4,6 +4,10 @@ use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+// Property-based tests module
+#[cfg(test)]
+mod property_tests;
+
 // Set up panic hook for better error messages in browser
 #[wasm_bindgen(start)]
 pub fn main() {

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Complete TDD Implementation Demo</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #00ff00;
+        }
+        
+        h1 {
+            color: #00ffff;
+            text-align: center;
+            border-bottom: 2px solid #00ffff;
+            padding-bottom: 10px;
+        }
+        
+        .section {
+            background: #111;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .section h2 {
+            color: #ffff00;
+            margin-top: 0;
+        }
+        
+        #output {
+            background: #000;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            min-height: 500px;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: #333;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #00ff00;
+            color: #000;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .info { color: #ffff00; }
+        .warning { color: #ff8800; }
+        .highlight { color: #00ffff; }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-box {
+            background: #222;
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00ffff;
+        }
+        
+        .stat-label {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Complete TDD Implementation Demo</h1>
+    
+    <div class="section">
+        <h2>📊 Test Statistics</h2>
+        <div class="stats" id="stats">
+            <div class="stat-box">
+                <div class="stat-number" id="totalTests">0</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="passedTests">0</div>
+                <div class="stat-label">Passed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="failedTests">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="violations">0</div>
+                <div class="stat-label">Contract Violations</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>🎮 Test Controls</h2>
+        <div class="controls">
+            <button onclick="runPropertyTests()">🔬 Run Property Tests</button>
+            <button onclick="runContractTests()">🛡️ Run Contract Tests</button>
+            <button onclick="runIntegrationTests()">🔗 Run Integration Tests</button>
+            <button onclick="runStressTests()">💪 Run Stress Tests</button>
+            <button onclick="runAllTests()">🚀 Run All Tests</button>
+            <button onclick="clearOutput()">🧹 Clear Output</button>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>📋 Test Output</h2>
+        <div id="output">Initializing TDD Demo...</div>
+    </div>
+
+    <script type="module">
+        import { createValidatedWasmExports, ContractViolationError } from './src/contract_validation.js';
+
+        let wasmExports;
+        let testStats = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            violations: 0
+        };
+
+        // Initialize WASM and setup
+        async function initTDDDemo() {
+            try {
+                log("🚀 Initializing TDD Demo...", 'info');
+                wasmExports = await createValidatedWasmExports();
+                log("✅ WASM exports loaded with contract validation", 'success');
+                log("✅ TDD Demo ready!", 'success');
+                log("\n" + "=".repeat(60), 'info');
+                log("🎯 Ready to run comprehensive TDD tests!", 'highlight');
+                log("📋 Available test suites:", 'info');
+                log("  🔬 Property Tests - Protocol invariant verification", 'info');
+                log("  🛡️ Contract Tests - Interface validation", 'info');
+                log("  🔗 Integration Tests - End-to-end functionality", 'info');
+                log("  💪 Stress Tests - Performance and reliability", 'info');
+                log("=".repeat(60), 'info');
+            } catch (error) {
+                log(`❌ Initialization failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Logging utility
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            output.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalTests').textContent = testStats.total;
+            document.getElementById('passedTests').textContent = testStats.passed;
+            document.getElementById('failedTests').textContent = testStats.failed;
+            document.getElementById('violations').textContent = testStats.violations;
+        }
+
+        // Property-based tests
+        window.runPropertyTests = async function() {
+            log("\n🔬 RUNNING PROPERTY-BASED TESTS", 'highlight');
+            log("=".repeat(50), 'info');
+            
+            const properties = [
+                {
+                    name: "Keypair Generation Consistency",
+                    test: () => {
+                        const kp1 = new wasmExports.WasmKeyPair();
+                        const kp2 = new wasmExports.WasmKeyPair();
+                        
+                        // Property: Keys should be different
+                        if (kp1.public_key_hex === kp2.public_key_hex) {
+                            throw new Error("Generated keypairs should be unique");
+                        }
+                        
+                        // Property: Keys should have correct format
+                        if (kp1.public_key_bytes.length !== 32) {
+                            throw new Error("Public key must be 32 bytes");
+                        }
+                        
+                        return true;
+                    }
+                },
+                {
+                    name: "Signature Verification Consistency",
+                    test: () => {
+                        const kp = new wasmExports.WasmKeyPair();
+                        const data = new TextEncoder().encode("test data");
+                        
+                        // Property: Signature should verify with correct key
+                        const signature = kp.sign(data);
+                        const verified = wasmExports.verify_signature(kp.public_key_bytes, data, signature);
+                        
+                        if (!verified) {
+                            throw new Error("Signature should verify with correct key");
+                        }
+                        
+                        // Property: Signature should fail with wrong key
+                        const wrongKp = new wasmExports.WasmKeyPair();
+                        const wrongVerified = wasmExports.verify_signature(wrongKp.public_key_bytes, data, signature);
+                        
+                        if (wrongVerified) {
+                            throw new Error("Signature should not verify with wrong key");
+                        }
+                        
+                        return true;
+                    }
+                },
+                {
+                    name: "Hex Conversion Roundtrip",
+                    test: () => {
+                        const originalBytes = new Uint8Array([0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef]);
+                        
+                        // Property: Conversion should be reversible
+                        const hex = wasmExports.bytes_to_hex(originalBytes);
+                        const convertedBack = wasmExports.hex_to_bytes(hex);
+                        
+                        if (!arraysEqual(originalBytes, convertedBack)) {
+                            throw new Error("Hex conversion should be reversible");
+                        }
+                        
+                        return true;
+                    }
+                },
+                {
+                    name: "Invite Code Format Consistency",
+                    test: () => {
+                        for (let i = 0; i < 10; i++) {
+                            const invite = wasmExports.generate_invite_code();
+                            
+                            // Property: Should be 16 characters
+                            if (invite.length !== 16) {
+                                throw new Error("Invite code must be 16 characters");
+                            }
+                            
+                            // Property: Should be base32 format
+                            if (!/^[A-Z0-9]+$/.test(invite)) {
+                                throw new Error("Invite code must be base32 format");
+                            }
+                            
+                            // Property: Should validate
+                            if (!wasmExports.validate_invite_code(invite)) {
+                                throw new Error("Generated invite code should validate");
+                            }
+                        }
+                        
+                        return true;
+                    }
+                }
+            ];
+            
+            for (const property of properties) {
+                try {
+                    testStats.total++;
+                    property.test();
+                    testStats.passed++;
+                    log(`✅ ${property.name}`, 'success');
+                } catch (error) {
+                    testStats.failed++;
+                    log(`❌ ${property.name}: ${error.message}`, 'error');
+                }
+            }
+            
+            updateStats();
+            log(`\n📊 Property Tests Complete: ${testStats.passed}/${properties.length} passed`, 'info');
+        };
+
+        // Contract validation tests
+        window.runContractTests = async function() {
+            log("\n🛡️ RUNNING CONTRACT VALIDATION TESTS", 'highlight');
+            log("=".repeat(50), 'info');
+            
+            const contractTests = [
+                {
+                    name: "Parameter Type Validation",
+                    test: () => {
+                        try {
+                            wasmExports.validate_invite_code(123); // Should fail
+                            throw new Error("Should have thrown ContractViolationError");
+                        } catch (error) {
+                            if (!(error instanceof ContractViolationError)) {
+                                throw new Error("Expected ContractViolationError");
+                            }
+                            testStats.violations++;
+                        }
+                        return true;
+                    }
+                },
+                {
+                    name: "Missing Parameter Detection",
+                    test: () => {
+                        try {
+                            wasmExports.bytes_to_hex(); // Should fail
+                            throw new Error("Should have thrown ContractViolationError");
+                        } catch (error) {
+                            if (!(error instanceof ContractViolationError)) {
+                                throw new Error("Expected ContractViolationError");
+                            }
+                            testStats.violations++;
+                        }
+                        return true;
+                    }
+                },
+                {
+                    name: "Return Value Validation",
+                    test: () => {
+                        const invite = wasmExports.generate_invite_code();
+                        
+                        // Contract should validate return value format
+                        if (typeof invite !== 'string') {
+                            throw new Error("Return value should be string");
+                        }
+                        
+                        if (invite.length !== 16) {
+                            throw new Error("Return value should be 16 characters");
+                        }
+                        
+                        return true;
+                    }
+                },
+                {
+                    name: "Class Constructor Validation",
+                    test: () => {
+                        try {
+                            new wasmExports.WasmMessage("not bytes", "not bytes", "content"); // Should fail
+                            throw new Error("Should have thrown ContractViolationError");
+                        } catch (error) {
+                            if (!(error instanceof ContractViolationError)) {
+                                throw new Error("Expected ContractViolationError");
+                            }
+                            testStats.violations++;
+                        }
+                        return true;
+                    }
+                }
+            ];
+            
+            for (const test of contractTests) {
+                try {
+                    testStats.total++;
+                    test.test();
+                    testStats.passed++;
+                    log(`✅ ${test.name}`, 'success');
+                } catch (error) {
+                    testStats.failed++;
+                    log(`❌ ${test.name}: ${error.message}`, 'error');
+                }
+            }
+            
+            updateStats();
+            log(`\n📊 Contract Tests Complete: ${testStats.passed - testStats.failed}/${contractTests.length} passed`, 'info');
+        };
+
+        // Integration tests
+        window.runIntegrationTests = async function() {
+            log("\n🔗 RUNNING INTEGRATION TESTS", 'highlight');
+            log("=".repeat(50), 'info');
+            
+            const integrationTests = [
+                {
+                    name: "End-to-End Message Flow",
+                    test: () => {
+                        const alice = new wasmExports.WasmKeyPair();
+                        const bob = new wasmExports.WasmKeyPair();
+                        
+                        // Create message
+                        const message = new wasmExports.WasmMessage(
+                            alice.public_key_bytes,
+                            bob.public_key_bytes,
+                            "Hello Bob from Alice!"
+                        );
+                        
+                        // Sign message
+                        message.sign(alice.keypair_bytes);
+                        
+                        // Verify message
+                        const verified = message.verify(alice.public_key_bytes);
+                        
+                        if (!verified) {
+                            throw new Error("Message should verify");
+                        }
+                        
+                        // Serialize and deserialize
+                        const json = message.to_json();
+                        const deserialized = wasmExports.WasmMessage.from_json(json);
+                        
+                        if (!deserialized || deserialized.content !== "Hello Bob from Alice!") {
+                            throw new Error("Serialization roundtrip failed");
+                        }
+                        
+                        return true;
+                    }
+                },
+                {
+                    name: "Cross-Function Consistency",
+                    test: () => {
+                        const kp = new wasmExports.WasmKeyPair();
+                        const data = new TextEncoder().encode("consistency test");
+                        
+                        // Sign using keypair method
+                        const signature = kp.sign(data);
+                        
+                        // Verify using standalone function
+                        const verified = wasmExports.verify_signature(kp.public_key_bytes, data, signature);
+                        
+                        if (!verified) {
+                            throw new Error("Cross-function verification failed");
+                        }
+                        
+                        return true;
+                    }
+                },
+                {
+                    name: "Data Conversion Integration",
+                    test: () => {
+                        const kp = new wasmExports.WasmKeyPair();
+                        
+                        // Test hex conversion of public key
+                        const pubkeyHex = wasmExports.bytes_to_hex(kp.public_key_bytes);
+                        const pubkeyBytes = wasmExports.hex_to_bytes(pubkeyHex);
+                        
+                        if (!arraysEqual(kp.public_key_bytes, pubkeyBytes)) {
+                            throw new Error("Public key hex conversion failed");
+                        }
+                        
+                        // Verify hex property matches conversion
+                        if (kp.public_key_hex !== pubkeyHex) {
+                            throw new Error("Hex property doesn't match conversion");
+                        }
+                        
+                        return true;
+                    }
+                }
+            ];
+            
+            for (const test of integrationTests) {
+                try {
+                    testStats.total++;
+                    test.test();
+                    testStats.passed++;
+                    log(`✅ ${test.name}`, 'success');
+                } catch (error) {
+                    testStats.failed++;
+                    log(`❌ ${test.name}: ${error.message}`, 'error');
+                }
+            }
+            
+            updateStats();
+            log(`\n📊 Integration Tests Complete`, 'info');
+        };
+
+        // Stress tests
+        window.runStressTests = async function() {
+            log("\n💪 RUNNING STRESS TESTS", 'highlight');
+            log("=".repeat(50), 'info');
+            
+            const stressTests = [
+                {
+                    name: "High-Frequency Operations",
+                    test: () => {
+                        const startTime = Date.now();
+                        const iterations = 100;
+                        
+                        for (let i = 0; i < iterations; i++) {
+                            const kp = new wasmExports.WasmKeyPair();
+                            const data = new TextEncoder().encode(`test ${i}`);
+                            const signature = kp.sign(data);
+                            const verified = wasmExports.verify_signature(kp.public_key_bytes, data, signature);
+                            
+                            if (!verified) {
+                                throw new Error(`Verification failed at iteration ${i}`);
+                            }
+                        }
+                        
+                        const duration = Date.now() - startTime;
+                        const avgTime = duration / iterations;
+                        
+                        log(`  📈 ${iterations} operations in ${duration}ms (${avgTime.toFixed(2)}ms avg)`, 'info');
+                        
+                        if (avgTime > 100) {
+                            throw new Error("Average operation time too slow");
+                        }
+                        
+                        return true;
+                    }
+                },
+                {
+                    name: "Large Data Handling",
+                    test: () => {
+                        const kp = new wasmExports.WasmKeyPair();
+                        const largeData = new Uint8Array(100000).fill(0xaa); // 100KB
+                        
+                        const startTime = Date.now();
+                        const signature = kp.sign(largeData);
+                        const verified = wasmExports.verify_signature(kp.public_key_bytes, largeData, signature);
+                        const duration = Date.now() - startTime;
+                        
+                        log(`  📈 100KB data processed in ${duration}ms`, 'info');
+                        
+                        if (!verified) {
+                            throw new Error("Large data verification failed");
+                        }
+                        
+                        if (duration > 1000) {
+                            throw new Error("Large data processing too slow");
+                        }
+                        
+                        return true;
+                    }
+                },
+                {
+                    name: "Memory Stability",
+                    test: () => {
+                        const initialMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+                        
+                        // Create and destroy many objects
+                        for (let i = 0; i < 50; i++) {
+                            const kp = new wasmExports.WasmKeyPair();
+                            const message = new wasmExports.WasmMessage(kp.public_key_bytes, kp.public_key_bytes, `test ${i}`);
+                            message.sign(kp.keypair_bytes);
+                            message.verify(kp.public_key_bytes);
+                        }
+                        
+                        const finalMemory = performance.memory ? performance.memory.usedJSHeapSize : 0;
+                        
+                        if (initialMemory > 0 && finalMemory > 0) {
+                            const memoryGrowth = finalMemory - initialMemory;
+                            log(`  📈 Memory growth: ${(memoryGrowth / 1024 / 1024).toFixed(2)}MB`, 'info');
+                            
+                            if (memoryGrowth > 10 * 1024 * 1024) { // 10MB
+                                throw new Error("Excessive memory growth detected");
+                            }
+                        }
+                        
+                        return true;
+                    }
+                }
+            ];
+            
+            for (const test of stressTests) {
+                try {
+                    testStats.total++;
+                    test.test();
+                    testStats.passed++;
+                    log(`✅ ${test.name}`, 'success');
+                } catch (error) {
+                    testStats.failed++;
+                    log(`❌ ${test.name}: ${error.message}`, 'error');
+                }
+            }
+            
+            updateStats();
+            log(`\n📊 Stress Tests Complete`, 'info');
+        };
+
+        // Run all tests
+        window.runAllTests = async function() {
+            log("\n🚀 RUNNING COMPLETE TDD TEST SUITE", 'highlight');
+            log("=".repeat(60), 'info');
+            
+            const startTime = Date.now();
+            
+            await runPropertyTests();
+            await runContractTests();
+            await runIntegrationTests();
+            await runStressTests();
+            
+            const duration = Date.now() - startTime;
+            
+            log("\n" + "=".repeat(60), 'info');
+            log("🎉 COMPLETE TDD TEST SUITE FINISHED!", 'highlight');
+            log(`⏱️  Total Duration: ${duration}ms`, 'info');
+            log(`📊 Final Results:`, 'info');
+            log(`   Total Tests: ${testStats.total}`, 'info');
+            log(`   Passed: ${testStats.passed}`, 'success');
+            log(`   Failed: ${testStats.failed}`, testStats.failed > 0 ? 'error' : 'success');
+            log(`   Contract Violations: ${testStats.violations}`, 'warning');
+            log(`   Success Rate: ${((testStats.passed / testStats.total) * 100).toFixed(1)}%`, 'highlight');
+            
+            // Get validation report
+            const report = wasmExports.validator.getReport();
+            log(`\n📋 Contract Validation Report:`, 'info');
+            log(`   Contract Tests: ${report.totalTests}`, 'info');
+            log(`   Contract Violations: ${report.violations}`, 'info');
+            log(`   Contract Success Rate: ${((report.passedTests / report.totalTests) * 100).toFixed(1)}%`, 'info');
+            
+            log("=".repeat(60), 'info');
+        };
+
+        // Clear output
+        window.clearOutput = function() {
+            document.getElementById('output').innerHTML = '';
+            testStats = { total: 0, passed: 0, failed: 0, violations: 0 };
+            updateStats();
+            log("🧹 Output cleared. Ready for new tests!", 'info');
+        };
+
+        // Utility functions
+        function arraysEqual(a, b) {
+            if (a.length !== b.length) return false;
+            for (let i = 0; i < a.length; i++) {
+                if (a[i] !== b[i]) return false;
+            }
+            return true;
+        }
+
+        // Initialize on load
+        initTDDDemo();
+    </script>
+</body>
+</html>
