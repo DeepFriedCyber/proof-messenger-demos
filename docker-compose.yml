@@ -1,0 +1,152 @@
+# Docker Compose Configuration for Proof Messenger
+# Complete containerized deployment with TDD validation
+
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Relay Server (Backend)
+  # =============================================================================
+  relay-server:
+    build:
+      context: .
+      dockerfile: proof-messenger-relay/Dockerfile
+      target: runtime
+    container_name: proof-messenger-relay
+    ports:
+      - "8080:8080"
+    environment:
+      - RUST_LOG=info
+      - BIND_ADDRESS=0.0.0.0:8080
+    networks:
+      - proof-messenger-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.relay.rule=Host(`relay.localhost`)"
+      - "traefik.http.services.relay.loadbalancer.server.port=8080"
+
+  # =============================================================================
+  # Web Application (Frontend)
+  # =============================================================================
+  web-app:
+    build:
+      context: proof-messenger-web
+      dockerfile: Dockerfile.simple
+    container_name: proof-messenger-web
+    ports:
+      - "80:80"
+    depends_on:
+      relay-server:
+        condition: service_healthy
+    networks:
+      - proof-messenger-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`localhost`)"
+      - "traefik.http.services.web.loadbalancer.server.port=80"
+
+  # =============================================================================
+  # Development Web Server (Alternative)
+  # =============================================================================
+  web-dev:
+    build:
+      context: .
+      dockerfile: proof-messenger-web/Dockerfile
+      target: dev-server
+    container_name: proof-messenger-web-dev
+    ports:
+      - "8000:8000"
+    depends_on:
+      relay-server:
+        condition: service_healthy
+    networks:
+      - proof-messenger-network
+    restart: unless-stopped
+    profiles:
+      - dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # =============================================================================
+  # E2E Testing Service
+  # =============================================================================
+  e2e-tests:
+    build:
+      context: .
+      dockerfile: proof-messenger-web/Dockerfile
+      target: tester
+    container_name: proof-messenger-e2e
+    depends_on:
+      relay-server:
+        condition: service_healthy
+      web-app:
+        condition: service_healthy
+    networks:
+      - proof-messenger-network
+    environment:
+      - BASE_URL=http://web-app
+      - RELAY_URL=http://relay-server:8080
+    profiles:
+      - test
+    command: ["npm", "run", "test:e2e"]
+    volumes:
+      - ./test-results:/usr/src/proof-messenger-web/test-results
+
+  # =============================================================================
+  # Load Balancer / Reverse Proxy (Optional)
+  # =============================================================================
+  traefik:
+    image: traefik:v2.10
+    container_name: proof-messenger-traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+    ports:
+      - "8090:80"      # HTTP
+      - "8443:443"     # HTTPS
+      - "8091:8080"    # Traefik Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proof-messenger-network
+    profiles:
+      - proxy
+    restart: unless-stopped
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  proof-messenger-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  test-results:
+    driver: local

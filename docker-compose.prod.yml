@@ -1,0 +1,213 @@
+# Production Docker Compose Configuration
+# Optimized for production deployment with security and monitoring
+
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Relay Server (Backend) - Production Configuration
+  # =============================================================================
+  relay-server:
+    build:
+      context: .
+      dockerfile: proof-messenger-relay/Dockerfile
+      target: runtime
+    container_name: proof-messenger-relay-prod
+    ports:
+      - "${RELAY_PORT:-8080}:8080"
+    environment:
+      - RUST_LOG=${RUST_LOG:-warn}
+      - BIND_ADDRESS=0.0.0.0:8080
+      - RUST_BACKTRACE=${RUST_BACKTRACE:-0}
+    networks:
+      - proof-messenger-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.relay-prod.rule=Host(`${RELAY_DOMAIN:-relay.localhost}`)"
+      - "traefik.http.routers.relay-prod.tls=true"
+      - "traefik.http.routers.relay-prod.tls.certresolver=letsencrypt"
+      - "traefik.http.services.relay-prod.loadbalancer.server.port=8080"
+      - "traefik.http.middlewares.relay-security.headers.customrequestheaders.X-Forwarded-Proto=https"
+
+  # =============================================================================
+  # Web Application (Frontend) - Production Configuration
+  # =============================================================================
+  web-app:
+    build:
+      context: .
+      dockerfile: proof-messenger-web/Dockerfile
+      target: production
+    container_name: proof-messenger-web-prod
+    ports:
+      - "${WEB_PORT:-80}:80"
+    depends_on:
+      relay-server:
+        condition: service_healthy
+    networks:
+      - proof-messenger-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:noexec,nosuid,size=50m
+      - /var/run:noexec,nosuid,size=10m
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web-prod.rule=Host(`${WEB_DOMAIN:-localhost}`)"
+      - "traefik.http.routers.web-prod.tls=true"
+      - "traefik.http.routers.web-prod.tls.certresolver=letsencrypt"
+      - "traefik.http.services.web-prod.loadbalancer.server.port=80"
+      - "traefik.http.middlewares.web-security.headers.customrequestheaders.X-Forwarded-Proto=https"
+
+  # =============================================================================
+  # Reverse Proxy with SSL Termination
+  # =============================================================================
+  traefik:
+    image: traefik:v2.10
+    container_name: proof-messenger-traefik-prod
+    command:
+      - "--api.dashboard=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@localhost}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--log.level=${TRAEFIK_LOG_LEVEL:-WARN}"
+      - "--accesslog=true"
+      - "--global.sendanonymoususage=false"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
+    networks:
+      - proof-messenger-network
+    restart: always
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    security_opt:
+      - no-new-privileges:true
+
+  # =============================================================================
+  # Monitoring and Logging (Optional)
+  # =============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: proof-messenger-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - proof-messenger-network
+    restart: always
+    profiles:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: proof-messenger-grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - proof-messenger-network
+    restart: always
+    profiles:
+      - monitoring
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  proof-messenger-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+    driver_opts:
+      com.docker.network.bridge.name: proof-messenger-prod
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  traefik-letsencrypt:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
