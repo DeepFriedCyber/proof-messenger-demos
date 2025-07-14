@@ -4,6 +4,8 @@
 //! including message verification, database operations, and HTTP handlers.
 
 pub mod database;
+pub mod jwt_validator;
+pub mod auth_middleware;
 
 use axum::{
     extract::{Json, Path, Query, State},
@@ -22,6 +24,8 @@ use chrono;
 use hex;
 
 use database::{Database, DatabaseError, StoredMessage};
+use auth_middleware::{AuthContext, auth_middleware, require_scope};
+use jwt_validator::JwtValidator;
 
 /// Query parameters for message retrieval
 #[derive(Deserialize)]
@@ -223,6 +227,50 @@ pub fn create_app_with_rate_limiting(db: Arc<Database>) -> Router {
         .layer(CorsLayer::permissive()) // Note: Configure restrictively in production
 }
 
+/// Create the application router with OAuth2.0 JWT authentication
+/// This version implements proper Resource Server behavior for OAuth2.0 flows
+pub fn create_app_with_oauth(db: Arc<Database>, jwt_validator: Arc<JwtValidator>) -> Router {
+    use tower_http::trace::TraceLayer;
+    use tower_http::cors::CorsLayer;
+    use tower_http::set_header::SetResponseHeaderLayer;
+    use axum::middleware;
+
+    // Create protected routes that require authentication
+    let protected_routes = Router::new()
+        .route("/relay", post(authenticated_relay_handler))
+        .route("/messages/:group_id", get(authenticated_get_messages_handler))
+        .route("/message/:message_id", get(authenticated_get_message_by_id_handler))
+        .layer(middleware::from_fn_with_state(jwt_validator.clone(), auth_middleware))
+        .with_state((db.clone(), jwt_validator.clone()));
+
+    // Create public routes (health checks don't need authentication)
+    let public_routes = Router::new()
+        .route("/health", get(health_handler))
+        .route("/ready", get(ready_handler))
+        .with_state(db);
+
+    // Combine routes and apply security layers
+    Router::new()
+        .merge(protected_routes)
+        .merge(public_routes)
+        .layer(TraceLayer::new_for_http())
+        // Security headers
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::STRICT_TRANSPORT_SECURITY,
+            axum::http::HeaderValue::from_static("max-age=63072000; includeSubDomains"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::X_CONTENT_TYPE_OPTIONS,
+            axum::http::HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::X_FRAME_OPTIONS,
+            axum::http::HeaderValue::from_static("DENY"),
+        ))
+        // CORS layer (configure restrictively in production)
+        .layer(CorsLayer::permissive())
+}
+
 /// The Axum handler for message relay
 #[instrument(skip_all)]
 async fn relay_handler(
@@ -331,6 +379,88 @@ async fn ready_handler(State(db): State<Arc<Database>>) -> impl IntoResponse {
     }));
     
     (status_code, ready_response)
+}
+
+/// OAuth2.0-protected relay handler that requires authentication and proper scopes
+#[instrument(skip_all)]
+async fn authenticated_relay_handler(
+    State((db, _validator)): State<(Arc<Database>, Arc<JwtValidator>)>,
+    auth: AuthContext,
+    Json(payload): Json<Message>,
+) -> Result<impl IntoResponse, AppError> {
+    info!("Received authenticated message for relay from user: {}", auth.user_id);
+    
+    // Check if user has required scope for creating proofs
+    require_scope(&auth, "proof:create")
+        .map_err(|_| AppError::ProcessingError("Insufficient permissions to create proofs".to_string()))?;
+    
+    // Delegate to the unit-tested function
+    process_and_verify_message(&payload)?;
+    
+    // Store the verified message in the database with user context
+    let stored_message = StoredMessage::from(payload);
+    // You could add user_id to the stored message for audit trails
+    let message_id = db.store_message(stored_message).await?;
+    
+    let success_response = Json(serde_json::json!({
+        "status": "success",
+        "message": "Message verified and relayed successfully",
+        "message_id": message_id,
+        "authenticated_user": auth.user_id
+    }));
+    
+    Ok((StatusCode::OK, success_response))
+}
+
+/// OAuth2.0-protected handler to retrieve messages for a specific group
+#[instrument(skip_all)]
+async fn authenticated_get_messages_handler(
+    State((db, _validator)): State<(Arc<Database>, Arc<JwtValidator>)>,
+    auth: AuthContext,
+    Path(group_id): Path<String>,
+    Query(params): Query<MessageQuery>,
+) -> Result<impl IntoResponse, AppError> {
+    info!("Authenticated user {} retrieving messages for group: {}", auth.user_id, group_id);
+    
+    // Check if user has required scope for reading messages
+    require_scope(&auth, "message:read")
+        .map_err(|_| AppError::ProcessingError("Insufficient permissions to read messages".to_string()))?;
+    
+    let messages = db.get_messages_by_group(&group_id, params.limit).await?;
+    
+    let response = Json(serde_json::json!({
+        "status": "success",
+        "group_id": group_id,
+        "message_count": messages.len(),
+        "messages": messages,
+        "authenticated_user": auth.user_id
+    }));
+    
+    Ok((StatusCode::OK, response))
+}
+
+/// OAuth2.0-protected handler to retrieve a specific message by ID
+#[instrument(skip_all)]
+async fn authenticated_get_message_by_id_handler(
+    State((db, _validator)): State<(Arc<Database>, Arc<JwtValidator>)>,
+    auth: AuthContext,
+    Path(message_id): Path<String>,
+) -> Result<impl IntoResponse, AppError> {
+    info!("Authenticated user {} retrieving message: {}", auth.user_id, message_id);
+    
+    // Check if user has required scope for reading messages
+    require_scope(&auth, "message:read")
+        .map_err(|_| AppError::ProcessingError("Insufficient permissions to read messages".to_string()))?;
+    
+    let message = db.get_message_by_id(&message_id).await?;
+    
+    let response = Json(serde_json::json!({
+        "status": "success",
+        "message": message,
+        "authenticated_user": auth.user_id
+    }));
+    
+    Ok((StatusCode::OK, response))
 }
 
 // TDD Step 1: Write the failing tests first
