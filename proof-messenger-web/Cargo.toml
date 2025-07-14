@@ -29,6 +29,7 @@ console_error_panic_hook = "0.1"
 hex = "0.4"
 base32 = "0.4"
 uuid = { version = "1.0", features = ["v4", "wasm-bindgen"] }
+thiserror = "1.0"
 
 [dev-dependencies]
 proptest = "1.0"

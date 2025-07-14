@@ -8,13 +8,27 @@
 //! - Easily reusable for CLI, web, and relay servers
 //!
 //! ## Features
-//! - Keypair generation (Ed25519 or PQC-ready)
+//! - Secure keypair generation with automatic memory protection (Ed25519 or PQC-ready)
 //! - Proof and invite flows
 //! - Message context and verification
+//! - Automatic zeroization of sensitive key material
 //! - Formal specification (TLA+), property-based and integration tests
 //! - WASM support for web and mobile
 //!
 //! ## Example Usage
+//! ```rust
+//! use proof_messenger_protocol::key::generate_secure_keypair;
+//! use proof_messenger_protocol::proof::{make_proof, Invite, verify_proof};
+//! 
+//! // Recommended: Use SecureKeypair for automatic memory protection
+//! let keypair = generate_secure_keypair();
+//! let invite = Invite::new_with_seed(42);
+//! let proof = make_proof(&keypair.as_keypair(), &invite);
+//! assert!(verify_proof(&proof, &keypair.public_key(), &invite));
+//! // Private key material is automatically zeroed when keypair goes out of scope
+//! ```
+//!
+//! ## Legacy Example (for backward compatibility)
 //! ```rust
 //! use proof_messenger_protocol::key::generate_keypair;
 //! use proof_messenger_protocol::proof::{make_proof, Invite, verify_proof};

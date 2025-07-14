@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Test Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Demo Test Page</h1>
+        <p>This page tests if the basic setup is working.</p>
+        
+        <div class="alert alert-info">
+            <h4>Test Results:</h4>
+            <ul id="testResults">
+                <li>Loading...</li>
+            </ul>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Direct Links:</h3>
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <a href="fintech-wire-transfer.html" target="_blank">FinTech Demo</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="healthcare-record-access.html" target="_blank">Healthcare Demo</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="legal-document-signing.html" target="_blank">Legal Demo</a>
+                    </li>
+                    <li class="list-group-item">
+                        <a href="government-secure-command.html" target="_blank">Government Demo</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h3>Console Output:</h3>
+                <div id="consoleOutput" style="background: #000; color: #0f0; padding: 1rem; font-family: monospace; height: 200px; overflow-y: auto;">
+                    Console messages will appear here...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Capture console messages
+        const originalLog = console.log;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('consoleOutput');
+        
+        function addToConsole(message, type = 'log') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#f00' : '#0f0';
+            consoleOutput.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addToConsole(args.join(' '), 'log');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addToConsole(args.join(' '), 'error');
+        };
+        
+        // Run tests
+        const testResults = document.getElementById('testResults');
+        testResults.innerHTML = '';
+        
+        function addTestResult(test, result) {
+            const li = document.createElement('li');
+            li.innerHTML = `${test}: <span style="color: ${result ? 'green' : 'red'}">${result ? 'PASS' : 'FAIL'}</span>`;
+            testResults.appendChild(li);
+        }
+        
+        // Test Bootstrap
+        addTestResult('Bootstrap CSS loaded', typeof bootstrap !== 'undefined');
+        
+        // Test FontAwesome
+        const faTest = document.createElement('i');
+        faTest.className = 'fas fa-check';
+        document.body.appendChild(faTest);
+        const faLoaded = window.getComputedStyle(faTest, ':before').content !== 'none';
+        document.body.removeChild(faTest);
+        addTestResult('FontAwesome loaded', faLoaded);
+        
+        // Test basic JavaScript
+        addTestResult('JavaScript working', true);
+        
+        console.log('Test page loaded successfully');
+        console.log('Bootstrap version:', bootstrap ? 'Available' : 'Not available');
+        console.log('FontAwesome:', faLoaded ? 'Available' : 'Not available');
+    </script>
+</body>
+</html>

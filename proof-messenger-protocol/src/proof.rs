@@ -1,5 +1,6 @@
 use ed25519_dalek::{Keypair, PublicKey, Signature, SignatureError, Signer, Verifier};
 use thiserror::Error;
+use crate::key::SecureKeypair;
 
 /// Dedicated error enum for proof operations
 #[derive(Debug, Error)]
@@ -15,6 +16,18 @@ pub enum ProofError {
     /// Proof generation failed
     #[error("Proof generation failed: {0}")]
     GenerationFailed(String),
+    
+    /// Input validation failed
+    #[error("Input validation failed: {0}")]
+    InvalidInput(String),
+    
+    /// Context data is too large
+    #[error("Context data exceeds maximum allowed size of {max} bytes (got {actual} bytes)")]
+    ContextTooLarge { max: usize, actual: usize },
+    
+    /// Context data is empty when it shouldn't be
+    #[error("Context data cannot be empty")]
+    EmptyContext,
 }
 
 #[derive(Clone)]
@@ -22,11 +35,53 @@ pub struct Invite {
     pub data: Vec<u8>, // e.g., group ID, timestamp, etc.
 }
 
+/// Maximum allowed size for context data (1MB)
+/// This prevents DoS attacks through extremely large context data
+pub const MAX_CONTEXT_SIZE: usize = 1024 * 1024;
+
+/// Minimum allowed size for context data in secure operations
+/// Empty context can be a security risk in some scenarios
+pub const MIN_SECURE_CONTEXT_SIZE: usize = 1;
+
 impl Invite {
     pub fn new_with_seed(seed: u64) -> Self {
         let data = seed.to_be_bytes().to_vec();
         Invite { data }
     }
+    
+    /// Create a new invite with input validation
+    pub fn new_with_data(data: Vec<u8>) -> Result<Self, ProofError> {
+        validate_context_data(&data)?;
+        Ok(Invite { data })
+    }
+    
+    /// Get the invite data with validation
+    pub fn get_data(&self) -> &[u8] {
+        &self.data
+    }
+}
+
+/// Validate context data for security constraints
+fn validate_context_data(data: &[u8]) -> Result<(), ProofError> {
+    if data.len() > MAX_CONTEXT_SIZE {
+        return Err(ProofError::ContextTooLarge {
+            max: MAX_CONTEXT_SIZE,
+            actual: data.len(),
+        });
+    }
+    
+    // Note: We allow empty context for backward compatibility in some functions
+    // but provide secure variants that require non-empty context
+    Ok(())
+}
+
+/// Validate context data for secure operations (requires non-empty)
+fn validate_secure_context_data(data: &[u8]) -> Result<(), ProofError> {
+    if data.is_empty() {
+        return Err(ProofError::EmptyContext);
+    }
+    
+    validate_context_data(data)
 }
 
 // Legacy API for Invite-based proofs
@@ -45,6 +100,32 @@ pub fn make_proof_context(keypair: &Keypair, context: &[u8]) -> Signature {
     keypair.sign(context)
 }
 
+/// Create a secure proof using SecureKeypair with input validation
+/// 
+/// This function provides enhanced security by:
+/// - Using SecureKeypair for automatic memory protection
+/// - Validating input data size and format
+/// - Providing detailed error information
+pub fn make_secure_proof(
+    keypair: &SecureKeypair,
+    context: &[u8],
+) -> Result<Signature, ProofError> {
+    validate_context_data(context)?;
+    Ok(keypair.sign(context))
+}
+
+/// Create a secure proof with strict validation (non-empty context required)
+/// 
+/// This function is recommended for production use where empty context
+/// could represent a security risk.
+pub fn make_secure_proof_strict(
+    keypair: &SecureKeypair,
+    context: &[u8],
+) -> Result<Signature, ProofError> {
+    validate_secure_context_data(context)?;
+    Ok(keypair.sign(context))
+}
+
 /// Verify a proof with Result-based error handling
 /// 
 /// This function returns a Result instead of a bool, providing detailed
@@ -54,6 +135,34 @@ pub fn verify_proof_result(
     context: &[u8],
     sig: &Signature,
 ) -> Result<(), ProofError> {
+    pubkey.verify(context, sig)?;
+    Ok(())
+}
+
+/// Verify a proof with input validation
+/// 
+/// This function provides enhanced security by validating input data
+/// before performing cryptographic operations.
+pub fn verify_proof_secure(
+    pubkey: &PublicKey,
+    context: &[u8],
+    sig: &Signature,
+) -> Result<(), ProofError> {
+    validate_context_data(context)?;
+    pubkey.verify(context, sig)?;
+    Ok(())
+}
+
+/// Verify a proof with strict validation (non-empty context required)
+/// 
+/// This function is recommended for production use where empty context
+/// could represent a security risk.
+pub fn verify_proof_strict(
+    pubkey: &PublicKey,
+    context: &[u8],
+    sig: &Signature,
+) -> Result<(), ProofError> {
+    validate_secure_context_data(context)?;
     pubkey.verify(context, sig)?;
     Ok(())
 }

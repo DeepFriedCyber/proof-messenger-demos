@@ -1,0 +1,2519 @@
+{
+  "config": {
+    "configFile": "C:\\Users\\aps33\\Projects\\Rust Protocol\\proof-messenger-web\\playwright.config.js",
+    "rootDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\Users\\aps33\\Projects\\Rust Protocol\\proof-messenger-web\\tests\\e2e\\global-setup.js",
+    "globalTeardown": "C:\\Users\\aps33\\Projects\\Rust Protocol\\proof-messenger-web\\tests\\e2e\\global-teardown.js",
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/e2e-results.json"
+        }
+      ],
+      [
+        "junit",
+        {
+          "outputFile": "test-results/e2e-results.xml"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "Mobile Chrome",
+        "name": "Mobile Chrome",
+        "testDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {},
+        "id": "Mobile Safari",
+        "name": "Mobile Safari",
+        "testDir": "C:/Users/aps33/Projects/Rust Protocol/proof-messenger-web/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.54.0",
+    "workers": 12,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "messaging.spec.js",
+      "file": "messaging.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Proof Messenger E2E Journey",
+          "file": "messaging.spec.js",
+          "line": 17,
+          "column": 6,
+          "specs": [
+            {
+              "title": "complete user journey: generate key, sign message, and verify end-to-end",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-6f6036053be871f7e109",
+              "file": "messaging.spec.js",
+              "line": 32,
+              "column": 3
+            },
+            {
+              "title": "error handling: invalid message rejection by relay server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-4ae31d69119d37e05f22",
+              "file": "messaging.spec.js",
+              "line": 137,
+              "column": 3
+            },
+            {
+              "title": "cross-browser compatibility: key generation and signing",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-badf355e7879a656f141",
+              "file": "messaging.spec.js",
+              "line": 171,
+              "column": 3
+            },
+            {
+              "title": "performance: key generation and signing speed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-b4dfb949d8fc29a398f3",
+              "file": "messaging.spec.js",
+              "line": 194,
+              "column": 3
+            },
+            {
+              "title": "ui state management: reset functionality",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-d714261a06a7a12246d4",
+              "file": "messaging.spec.js",
+              "line": 223,
+              "column": 3
+            },
+            {
+              "title": "security validation: private key never exposed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-70e85079491f85569528",
+              "file": "messaging.spec.js",
+              "line": 252,
+              "column": 3
+            },
+            {
+              "title": "relay server integration: multiple message verification",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-3038e437d4c5f4a35d9d",
+              "file": "messaging.spec.js",
+              "line": 291,
+              "column": 3
+            },
+            {
+              "title": "complete user journey: generate key, sign message, and verify end-to-end",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-fe7f7befeb44f8c8c89c",
+              "file": "messaging.spec.js",
+              "line": 32,
+              "column": 3
+            },
+            {
+              "title": "error handling: invalid message rejection by relay server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-599f5cbbcbf5da62e03f",
+              "file": "messaging.spec.js",
+              "line": 137,
+              "column": 3
+            },
+            {
+              "title": "cross-browser compatibility: key generation and signing",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-9c95a55c3977bf1221ee",
+              "file": "messaging.spec.js",
+              "line": 171,
+              "column": 3
+            },
+            {
+              "title": "performance: key generation and signing speed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-2e948816e6bb67bfc3bc",
+              "file": "messaging.spec.js",
+              "line": 194,
+              "column": 3
+            },
+            {
+              "title": "ui state management: reset functionality",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-8f15a876da6de6debcad",
+              "file": "messaging.spec.js",
+              "line": 223,
+              "column": 3
+            },
+            {
+              "title": "security validation: private key never exposed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-84c3b67ade82d3cf30e6",
+              "file": "messaging.spec.js",
+              "line": 252,
+              "column": 3
+            },
+            {
+              "title": "relay server integration: multiple message verification",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-cc3e8ec46dd5434ff140",
+              "file": "messaging.spec.js",
+              "line": 291,
+              "column": 3
+            },
+            {
+              "title": "complete user journey: generate key, sign message, and verify end-to-end",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-b977d5b2026dafb6e700",
+              "file": "messaging.spec.js",
+              "line": 32,
+              "column": 3
+            },
+            {
+              "title": "error handling: invalid message rejection by relay server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-26ccaafe3f217d3977b8",
+              "file": "messaging.spec.js",
+              "line": 137,
+              "column": 3
+            },
+            {
+              "title": "cross-browser compatibility: key generation and signing",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-bb1a2448e654f0929b73",
+              "file": "messaging.spec.js",
+              "line": 171,
+              "column": 3
+            },
+            {
+              "title": "performance: key generation and signing speed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-1d125ae04fea266ffd8d",
+              "file": "messaging.spec.js",
+              "line": 194,
+              "column": 3
+            },
+            {
+              "title": "ui state management: reset functionality",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-32fe3504f57e4ccc1dcb",
+              "file": "messaging.spec.js",
+              "line": 223,
+              "column": 3
+            },
+            {
+              "title": "security validation: private key never exposed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-db8019f43dcdb38de7be",
+              "file": "messaging.spec.js",
+              "line": 252,
+              "column": 3
+            },
+            {
+              "title": "relay server integration: multiple message verification",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-e3164bf512abc7c13268",
+              "file": "messaging.spec.js",
+              "line": 291,
+              "column": 3
+            },
+            {
+              "title": "complete user journey: generate key, sign message, and verify end-to-end",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-0da6f99494dac9adb621",
+              "file": "messaging.spec.js",
+              "line": 32,
+              "column": 3
+            },
+            {
+              "title": "error handling: invalid message rejection by relay server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-9d718fa8141950c7a8f9",
+              "file": "messaging.spec.js",
+              "line": 137,
+              "column": 3
+            },
+            {
+              "title": "cross-browser compatibility: key generation and signing",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-295c9bc879dab1f57cff",
+              "file": "messaging.spec.js",
+              "line": 171,
+              "column": 3
+            },
+            {
+              "title": "performance: key generation and signing speed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-5acac3ec133ea5b50032",
+              "file": "messaging.spec.js",
+              "line": 194,
+              "column": 3
+            },
+            {
+              "title": "ui state management: reset functionality",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-a118cabb8dcd0298ca59",
+              "file": "messaging.spec.js",
+              "line": 223,
+              "column": 3
+            },
+            {
+              "title": "security validation: private key never exposed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-e5408f19a3450dc90125",
+              "file": "messaging.spec.js",
+              "line": 252,
+              "column": 3
+            },
+            {
+              "title": "relay server integration: multiple message verification",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-cea0c0ae190845e9f5fc",
+              "file": "messaging.spec.js",
+              "line": 291,
+              "column": 3
+            },
+            {
+              "title": "complete user journey: generate key, sign message, and verify end-to-end",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-193cfa6c476005436f4e",
+              "file": "messaging.spec.js",
+              "line": 32,
+              "column": 3
+            },
+            {
+              "title": "error handling: invalid message rejection by relay server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-f79b97de64c30a2670e9",
+              "file": "messaging.spec.js",
+              "line": 137,
+              "column": 3
+            },
+            {
+              "title": "cross-browser compatibility: key generation and signing",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-bf94c1b0318d07b9e9f6",
+              "file": "messaging.spec.js",
+              "line": 171,
+              "column": 3
+            },
+            {
+              "title": "performance: key generation and signing speed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-4684882162533904b88c",
+              "file": "messaging.spec.js",
+              "line": 194,
+              "column": 3
+            },
+            {
+              "title": "ui state management: reset functionality",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-ecb4d592c153904ee247",
+              "file": "messaging.spec.js",
+              "line": 223,
+              "column": 3
+            },
+            {
+              "title": "security validation: private key never exposed",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-894dd73ff72aa19a7567",
+              "file": "messaging.spec.js",
+              "line": 252,
+              "column": 3
+            },
+            {
+              "title": "relay server integration: multiple message verification",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-873ef082cd357dffc4bd",
+              "file": "messaging.spec.js",
+              "line": 291,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Error Scenarios and Edge Cases",
+          "file": "messaging.spec.js",
+          "line": 345,
+          "column": 6,
+          "specs": [
+            {
+              "title": "malformed requests to relay server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-c92f600dc89398c7966a",
+              "file": "messaging.spec.js",
+              "line": 352,
+              "column": 3
+            },
+            {
+              "title": "wasm loading failure simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-ee9a5a07e03aef4fc2d3",
+              "file": "messaging.spec.js",
+              "line": 384,
+              "column": 3
+            },
+            {
+              "title": "malformed requests to relay server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-23f956d92f3ab8c4811b",
+              "file": "messaging.spec.js",
+              "line": 352,
+              "column": 3
+            },
+            {
+              "title": "wasm loading failure simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-752ab166ae19a0638f0d",
+              "file": "messaging.spec.js",
+              "line": 384,
+              "column": 3
+            },
+            {
+              "title": "malformed requests to relay server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-8dfadf4125b3985aab06",
+              "file": "messaging.spec.js",
+              "line": 352,
+              "column": 3
+            },
+            {
+              "title": "wasm loading failure simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-1f9d0611cf988d6341fa",
+              "file": "messaging.spec.js",
+              "line": 384,
+              "column": 3
+            },
+            {
+              "title": "malformed requests to relay server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-50018a923ef4dee48f59",
+              "file": "messaging.spec.js",
+              "line": 352,
+              "column": 3
+            },
+            {
+              "title": "wasm loading failure simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-0ce4e7bd3ac5bcd230e9",
+              "file": "messaging.spec.js",
+              "line": 384,
+              "column": 3
+            },
+            {
+              "title": "malformed requests to relay server",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-1c7e9edde4edacb5e772",
+              "file": "messaging.spec.js",
+              "line": 352,
+              "column": 3
+            },
+            {
+              "title": "wasm loading failure simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-78f5e0c926e4aeed3d32",
+              "file": "messaging.spec.js",
+              "line": 384,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Accessibility and Usability",
+          "file": "messaging.spec.js",
+          "line": 410,
+          "column": 6,
+          "specs": [
+            {
+              "title": "keyboard navigation and accessibility",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-842029552b4808058413",
+              "file": "messaging.spec.js",
+              "line": 417,
+              "column": 3
+            },
+            {
+              "title": "responsive design on mobile viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-24c3d277d4f38397ebc6",
+              "file": "messaging.spec.js",
+              "line": 447,
+              "column": 3
+            },
+            {
+              "title": "keyboard navigation and accessibility",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-a9f3b635483560d820cf",
+              "file": "messaging.spec.js",
+              "line": 417,
+              "column": 3
+            },
+            {
+              "title": "responsive design on mobile viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-eb0c58d00f24d0cc1fd0",
+              "file": "messaging.spec.js",
+              "line": 447,
+              "column": 3
+            },
+            {
+              "title": "keyboard navigation and accessibility",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-843f680258a8d2ded8c6",
+              "file": "messaging.spec.js",
+              "line": 417,
+              "column": 3
+            },
+            {
+              "title": "responsive design on mobile viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-29265b3c2034666a1a0d",
+              "file": "messaging.spec.js",
+              "line": 447,
+              "column": 3
+            },
+            {
+              "title": "keyboard navigation and accessibility",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-4a1cc44363f7148ceacb",
+              "file": "messaging.spec.js",
+              "line": 417,
+              "column": 3
+            },
+            {
+              "title": "responsive design on mobile viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-d18e322fe2fc26872cbe",
+              "file": "messaging.spec.js",
+              "line": 447,
+              "column": 3
+            },
+            {
+              "title": "keyboard navigation and accessibility",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-68abbdab5c51e0a5b7b1",
+              "file": "messaging.spec.js",
+              "line": 417,
+              "column": 3
+            },
+            {
+              "title": "responsive design on mobile viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "7365f9584656dd5fbe8f-b0c354c5e8e72db90a07",
+              "file": "messaging.spec.js",
+              "line": 447,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "performance.spec.js",
+      "file": "performance.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Performance Testing",
+          "file": "performance.spec.js",
+          "line": 18,
+          "column": 6,
+          "specs": [
+            {
+              "title": "key generation performance benchmarks",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-788f9ec08ca808189495",
+              "file": "performance.spec.js",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "message signing performance with various message sizes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-07bf03f06d4a32877949",
+              "file": "performance.spec.js",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "concurrent operations stress test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-b2807e630ce7eb2b639b",
+              "file": "performance.spec.js",
+              "line": 97,
+              "column": 3
+            },
+            {
+              "title": "memory usage during extended operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-a948aece37787cccafac",
+              "file": "performance.spec.js",
+              "line": 135,
+              "column": 3
+            },
+            {
+              "title": "key generation performance benchmarks",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-b3d744642a6a39b0c480",
+              "file": "performance.spec.js",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "message signing performance with various message sizes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-bf847dc5faac98f34998",
+              "file": "performance.spec.js",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "concurrent operations stress test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-3ac1af0a40d22584f646",
+              "file": "performance.spec.js",
+              "line": 97,
+              "column": 3
+            },
+            {
+              "title": "memory usage during extended operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-a828f62a274f421fe1cd",
+              "file": "performance.spec.js",
+              "line": 135,
+              "column": 3
+            },
+            {
+              "title": "key generation performance benchmarks",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-10cc8c01b4598901b4aa",
+              "file": "performance.spec.js",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "message signing performance with various message sizes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-bc83f9d7ef5ee45df6ca",
+              "file": "performance.spec.js",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "concurrent operations stress test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-c1e8bd6c6d0d7d078142",
+              "file": "performance.spec.js",
+              "line": 97,
+              "column": 3
+            },
+            {
+              "title": "memory usage during extended operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-b398503a02d5158d1faf",
+              "file": "performance.spec.js",
+              "line": 135,
+              "column": 3
+            },
+            {
+              "title": "key generation performance benchmarks",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-faaffb3572905792bcc2",
+              "file": "performance.spec.js",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "message signing performance with various message sizes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-cd923878a4b5e4917e79",
+              "file": "performance.spec.js",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "concurrent operations stress test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-f64565331cc4115fa540",
+              "file": "performance.spec.js",
+              "line": 97,
+              "column": 3
+            },
+            {
+              "title": "memory usage during extended operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-3cbd3c019c22ab2e3bdd",
+              "file": "performance.spec.js",
+              "line": 135,
+              "column": 3
+            },
+            {
+              "title": "key generation performance benchmarks",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-5d2caec797107627fe94",
+              "file": "performance.spec.js",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "message signing performance with various message sizes",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-a63352ea09bc379d09f4",
+              "file": "performance.spec.js",
+              "line": 65,
+              "column": 3
+            },
+            {
+              "title": "concurrent operations stress test",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-b5a086873d8bd8525a02",
+              "file": "performance.spec.js",
+              "line": 97,
+              "column": 3
+            },
+            {
+              "title": "memory usage during extended operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-b07829781517cab65033",
+              "file": "performance.spec.js",
+              "line": 135,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Load Testing",
+          "file": "performance.spec.js",
+          "line": 169,
+          "column": 6,
+          "specs": [
+            {
+              "title": "relay server load test with multiple messages",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-c92c12d91a884fdb450b",
+              "file": "performance.spec.js",
+              "line": 176,
+              "column": 3
+            },
+            {
+              "title": "browser resource utilization under load",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-01aec9283a7368513c64",
+              "file": "performance.spec.js",
+              "line": 222,
+              "column": 3
+            },
+            {
+              "title": "error recovery under load conditions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-2bf451d558b9009cc2d6",
+              "file": "performance.spec.js",
+              "line": 266,
+              "column": 3
+            },
+            {
+              "title": "relay server load test with multiple messages",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-582cd42aaf9a92183924",
+              "file": "performance.spec.js",
+              "line": 176,
+              "column": 3
+            },
+            {
+              "title": "browser resource utilization under load",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-0541495c571387bd7dee",
+              "file": "performance.spec.js",
+              "line": 222,
+              "column": 3
+            },
+            {
+              "title": "error recovery under load conditions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-13dbdc8c0a7f643b30c2",
+              "file": "performance.spec.js",
+              "line": 266,
+              "column": 3
+            },
+            {
+              "title": "relay server load test with multiple messages",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-103d4f22a04f81537cf3",
+              "file": "performance.spec.js",
+              "line": 176,
+              "column": 3
+            },
+            {
+              "title": "browser resource utilization under load",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-11e1a2e86032ff6d702e",
+              "file": "performance.spec.js",
+              "line": 222,
+              "column": 3
+            },
+            {
+              "title": "error recovery under load conditions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-5b6eb141e93a5a618105",
+              "file": "performance.spec.js",
+              "line": 266,
+              "column": 3
+            },
+            {
+              "title": "relay server load test with multiple messages",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-53a0e49517e3ce8fb6fa",
+              "file": "performance.spec.js",
+              "line": 176,
+              "column": 3
+            },
+            {
+              "title": "browser resource utilization under load",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-15b5b5e0fdd6646d27de",
+              "file": "performance.spec.js",
+              "line": 222,
+              "column": 3
+            },
+            {
+              "title": "error recovery under load conditions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-b7583ea516e81a827efe",
+              "file": "performance.spec.js",
+              "line": 266,
+              "column": 3
+            },
+            {
+              "title": "relay server load test with multiple messages",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-058f32dfee4063dbffe8",
+              "file": "performance.spec.js",
+              "line": 176,
+              "column": 3
+            },
+            {
+              "title": "browser resource utilization under load",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-aceeab7cb46d5d25fe0c",
+              "file": "performance.spec.js",
+              "line": 222,
+              "column": 3
+            },
+            {
+              "title": "error recovery under load conditions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-b1fd34d665e4507b883c",
+              "file": "performance.spec.js",
+              "line": 266,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Scalability Testing",
+          "file": "performance.spec.js",
+          "line": 347,
+          "column": 6,
+          "specs": [
+            {
+              "title": "multiple browser instances simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-3de7fbb19270c254bf91",
+              "file": "performance.spec.js",
+              "line": 349,
+              "column": 3
+            },
+            {
+              "title": "multiple browser instances simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-3dcdd31b6213769f4c2f",
+              "file": "performance.spec.js",
+              "line": 349,
+              "column": 3
+            },
+            {
+              "title": "multiple browser instances simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-739768dbaaa6683f5fbb",
+              "file": "performance.spec.js",
+              "line": 349,
+              "column": 3
+            },
+            {
+              "title": "multiple browser instances simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-5e769509e81c0c21fda6",
+              "file": "performance.spec.js",
+              "line": 349,
+              "column": 3
+            },
+            {
+              "title": "multiple browser instances simulation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-214e5ced61427d63a0d1",
+              "file": "performance.spec.js",
+              "line": 349,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "react-integration.spec.js",
+      "file": "react-integration.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "React Component Integration",
+          "file": "react-integration.spec.js",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "zustand store integration with react components",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-6bcb1c4ac47ce2f6eb1b",
+              "file": "react-integration.spec.js",
+              "line": 23,
+              "column": 3
+            },
+            {
+              "title": "react component state isolation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-bfc26e9a9d57a8e9b8cb",
+              "file": "react-integration.spec.js",
+              "line": 45,
+              "column": 3
+            },
+            {
+              "title": "component re-rendering with secure state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-952a590512b946a30406",
+              "file": "react-integration.spec.js",
+              "line": 76,
+              "column": 3
+            },
+            {
+              "title": "zustand store integration with react components",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-5622201d9938393d524b",
+              "file": "react-integration.spec.js",
+              "line": 23,
+              "column": 3
+            },
+            {
+              "title": "react component state isolation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-1afef65c1ec0af8d219f",
+              "file": "react-integration.spec.js",
+              "line": 45,
+              "column": 3
+            },
+            {
+              "title": "component re-rendering with secure state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-8eb9b56d6e0f3187c231",
+              "file": "react-integration.spec.js",
+              "line": 76,
+              "column": 3
+            },
+            {
+              "title": "zustand store integration with react components",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-a4825e105fd2ad40aa34",
+              "file": "react-integration.spec.js",
+              "line": 23,
+              "column": 3
+            },
+            {
+              "title": "react component state isolation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-05cb1ca6480175103198",
+              "file": "react-integration.spec.js",
+              "line": 45,
+              "column": 3
+            },
+            {
+              "title": "component re-rendering with secure state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-66dd0b1c428223e22edf",
+              "file": "react-integration.spec.js",
+              "line": 76,
+              "column": 3
+            },
+            {
+              "title": "zustand store integration with react components",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-26a509d9e41d97df79c2",
+              "file": "react-integration.spec.js",
+              "line": 23,
+              "column": 3
+            },
+            {
+              "title": "react component state isolation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-9e99ff5c0f416d30cb4a",
+              "file": "react-integration.spec.js",
+              "line": 45,
+              "column": 3
+            },
+            {
+              "title": "component re-rendering with secure state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-5a4be1256e9c61733ac6",
+              "file": "react-integration.spec.js",
+              "line": 76,
+              "column": 3
+            },
+            {
+              "title": "zustand store integration with react components",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-f1d4c8dd562ef0f2337b",
+              "file": "react-integration.spec.js",
+              "line": 23,
+              "column": 3
+            },
+            {
+              "title": "react component state isolation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-dbed4e4134a9b9a34ee9",
+              "file": "react-integration.spec.js",
+              "line": 45,
+              "column": 3
+            },
+            {
+              "title": "component re-rendering with secure state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-658432af06640680dcbc",
+              "file": "react-integration.spec.js",
+              "line": 76,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Error Handling in React Components",
+          "file": "react-integration.spec.js",
+          "line": 104,
+          "column": 6,
+          "specs": [
+            {
+              "title": "react error boundaries for crypto operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-e387ca6cc7ebe8422de4",
+              "file": "react-integration.spec.js",
+              "line": 111,
+              "column": 3
+            },
+            {
+              "title": "react error boundaries for crypto operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-c1173d7e7c92b9ff9ca5",
+              "file": "react-integration.spec.js",
+              "line": 111,
+              "column": 3
+            },
+            {
+              "title": "react error boundaries for crypto operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-b622921acdd14c4540c5",
+              "file": "react-integration.spec.js",
+              "line": 111,
+              "column": 3
+            },
+            {
+              "title": "react error boundaries for crypto operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Chrome",
+                  "projectName": "Mobile Chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-c7dd86e340d4cafc2684",
+              "file": "react-integration.spec.js",
+              "line": 111,
+              "column": 3
+            },
+            {
+              "title": "react error boundaries for crypto operations",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "Mobile Safari",
+                  "projectName": "Mobile Safari",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "bf3da1d03998c8d1f950-0f95431213630c10e247",
+              "file": "react-integration.spec.js",
+              "line": 111,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-07-11T08:56:15.018Z",
+    "duration": 203.70799999999986,
+    "expected": 0,
+    "skipped": 115,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

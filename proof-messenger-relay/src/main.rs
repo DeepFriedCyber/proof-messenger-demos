@@ -1,4 +1,4 @@
-use proof_messenger_relay::{database::Database, create_app};
+use proof_messenger_relay::{database::Database, create_app_with_rate_limiting};
 use std::sync::Arc;
 use tracing::info;
 
@@ -21,7 +21,7 @@ async fn main() {
     
     let db = Arc::new(db);
 
-    let app = create_app(db);
+    let app = create_app_with_rate_limiting(db);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecureCommand Terminal - Post-Quantum Military Operations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+        .demo-header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-bottom: 2px solid #00ff00;
+            color: #00ff00;
+            padding: 1.5rem 0;
+            margin-bottom: 2rem;
+        }
+        .terminal-container {
+            background: #000000;
+            border: 2px solid #00ff00;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            min-height: 600px;
+        }
+        .terminal-header {
+            border-bottom: 1px solid #00ff00;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        .command-input {
+            background: transparent;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+        }
+        .command-input:focus {
+            background: transparent;
+            border-color: #00ff00;
+            color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        .crypto-select {
+            background: #1a1a1a;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+        .crypto-select:focus {
+            background: #1a1a1a;
+            border-color: #00ff00;
+            color: #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+        .status-badges {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border: 2px solid;
+            border-radius: 0.25rem;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            min-width: 150px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .status-verified {
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+        }
+        .status-skipped {
+            border-color: #666666;
+            background: rgba(102, 102, 102, 0.1);
+            color: #666666;
+        }
+        .status-pending {
+            border-color: #ffff00;
+            background: rgba(255, 255, 0, 0.1);
+            color: #ffff00;
+        }
+        .status-success {
+            border-color: #00ff00;
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            animation: glow 2s infinite;
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.8); }
+        }
+        .command-log {
+            background: #0a0a0a;
+            border: 1px solid #333333;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding: 0.25rem 0;
+        }
+        .log-timestamp {
+            color: #666666;
+        }
+        .log-command {
+            color: #00ffff;
+        }
+        .log-success {
+            color: #00ff00;
+        }
+        .log-error {
+            color: #ff0000;
+        }
+        .execute-btn {
+            background: linear-gradient(45deg, #00ff00, #00cc00);
+            border: none;
+            color: #000000;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            padding: 0.75rem 2rem;
+            border-radius: 0.25rem;
+            transition: all 0.3s ease;
+        }
+        .execute-btn:hover {
+            background: linear-gradient(45deg, #00cc00, #009900);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.6);
+        }
+        .execute-btn:disabled {
+            background: #333333;
+            color: #666666;
+        }
+        .classification-banner {
+            background: #ff0000;
+            color: #ffffff;
+            text-align: center;
+            padding: 0.5rem;
+            font-weight: bold;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+        .crypto-info {
+            background: #1a1a1a;
+            border: 1px solid #333333;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .crypto-algorithm {
+            color: #00ffff;
+            font-weight: bold;
+        }
+        .security-level {
+            color: #ffff00;
+        }
+        .quantum-resistant {
+            color: #ff00ff;
+        }
+        .processing-animation {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="classification-banner">
+        CLASSIFIED - FOR OFFICIAL USE ONLY - AUTHORIZED PERSONNEL ONLY
+    </div>
+
+    <div style="margin-top: 3rem;">
+        <div class="demo-header">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1><i class="fas fa-shield-alt"></i> SECURECOMMAND TERMINAL</h1>
+                        <p class="lead mb-0">Post-Quantum Military Operations System</p>
+                        <small>CRYPTO-AGILE • QUANTUM-RESISTANT • MISSION-CRITICAL</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="badge bg-danger fs-6">
+                            <i class="fas fa-lock"></i> CLEARANCE LEVEL: TOP SECRET
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="terminal-container">
+                        <div class="terminal-header">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div><strong>OPERATOR:</strong> COL. SARAH MARTINEZ</div>
+                                    <div><strong>CLEARANCE:</strong> TS/SCI</div>
+                                    <div><strong>LOCATION:</strong> NORAD COMMAND CENTER</div>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <div><strong>SESSION:</strong> SECURE-7749</div>
+                                    <div><strong>TIME:</strong> <span id="currentTime"></span></div>
+                                    <div><strong>STATUS:</strong> <span class="text-success">AUTHENTICATED</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="commandInput" class="form-label">COMMAND INPUT:</label>
+                            <input type="text" class="form-control command-input" id="commandInput" 
+                                   placeholder="Enter military command..." autocomplete="off">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="cryptoSelect" class="form-label">CRYPTOGRAPHIC PROTOCOL:</label>
+                            <select class="form-select crypto-select" id="cryptoSelect">
+                                <option value="ed25519">Ed25519 (Standard Security)</option>
+                                <option value="hybrid">Ed25519 + Dilithium (Post-Quantum Security)</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid mb-4">
+                            <button class="execute-btn" id="executeBtn">
+                                <i class="fas fa-rocket"></i> GENERATE & ROUTE COMMAND
+                            </button>
+                        </div>
+
+                        <div class="status-badges" id="statusBadges">
+                            <div class="status-badge status-skipped" id="ed25519Status">
+                                Ed25519: STANDBY ⚪
+                            </div>
+                            <div class="status-badge status-skipped" id="pqcStatus">
+                                PQC: STANDBY ⚪
+                            </div>
+                            <div class="status-badge status-skipped" id="overallStatus">
+                                OVERALL: STANDBY ⚪
+                            </div>
+                        </div>
+
+                        <div class="command-log" id="commandLog">
+                            <div class="log-entry">
+                                <span class="log-timestamp">[2025-07-15 14:30:15]</span> 
+                                <span class="log-success">SECURECOMMAND TERMINAL v3.1 INITIALIZED</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-timestamp">[2025-07-15 14:30:16]</span> 
+                                <span class="log-success">QUANTUM-RESISTANT PROTOCOLS LOADED</span>
+                            </div>
+                            <div class="log-entry">
+                                <span class="log-timestamp">[2025-07-15 14:30:17]</span> 
+                                <span class="log-success">AWAITING COMMAND INPUT...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <!-- Crypto Information -->
+                    <div class="crypto-info mb-4">
+                        <h6><i class="fas fa-key"></i> CRYPTOGRAPHIC STATUS</h6>
+                        <div class="mb-2">
+                            <strong>Primary Algorithm:</strong><br>
+                            <span class="crypto-algorithm" id="primaryAlgo">Ed25519</span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Security Level:</strong><br>
+                            <span class="security-level" id="securityLevel">STANDARD</span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Quantum Resistance:</strong><br>
+                            <span class="quantum-resistant" id="quantumResistance">CLASSICAL</span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Key Length:</strong><br>
+                            <span id="keyLength">256-bit</span>
+                        </div>
+                    </div>
+
+                    <!-- Mission Examples -->
+                    <div class="crypto-info mb-4">
+                        <h6><i class="fas fa-list"></i> EXAMPLE COMMANDS</h6>
+                        <div class="mb-2">
+                            <button class="btn btn-outline-success btn-sm w-100" onclick="setCommand('Route surveillance drone to Sector 4')">
+                                Standard: Drone Routing
+                            </button>
+                        </div>
+                        <div class="mb-2">
+                            <button class="btn btn-outline-warning btn-sm w-100" onclick="setCommand('Authorize deployment of asset Chimera')">
+                                Secure: Asset Deployment
+                            </button>
+                        </div>
+                        <div class="mb-2">
+                            <button class="btn btn-outline-danger btn-sm w-100" onclick="setCommand('Initiate DEFCON 2 alert status')">
+                                Critical: DEFCON Alert
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Protocol Information -->
+                    <div class="crypto-info">
+                        <h6><i class="fas fa-info-circle"></i> PROTOCOL INFO</h6>
+                        <div class="mb-2">
+                            <strong>Ed25519:</strong><br>
+                            <small>Elliptic curve digital signature algorithm. Fast, secure against classical computers.</small>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Dilithium:</strong><br>
+                            <small>NIST-standardized post-quantum signature scheme. Resistant to quantum computer attacks.</small>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Hybrid Mode:</strong><br>
+                            <small>Combines both algorithms for maximum security and future-proofing.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        // Demo state
+        let demoState = {
+            isProcessing: false,
+            commandHistory: []
+        };
+
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString() + ' UTC';
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Set example command
+        window.setCommand = function(command) {
+            document.getElementById('commandInput').value = command;
+            
+            // Auto-select appropriate crypto for certain commands
+            if (command.includes('Chimera') || command.includes('DEFCON')) {
+                document.getElementById('cryptoSelect').value = 'hybrid';
+                updateCryptoInfo();
+            }
+        };
+
+        // Update crypto information display
+        function updateCryptoInfo() {
+            const cryptoSelect = document.getElementById('cryptoSelect');
+            const isHybrid = cryptoSelect.value === 'hybrid';
+            
+            if (isHybrid) {
+                document.getElementById('primaryAlgo').textContent = 'Ed25519 + Dilithium';
+                document.getElementById('securityLevel').textContent = 'POST-QUANTUM';
+                document.getElementById('quantumResistance').textContent = 'QUANTUM-SAFE';
+                document.getElementById('keyLength').textContent = '256-bit + 2592-bit';
+            } else {
+                document.getElementById('primaryAlgo').textContent = 'Ed25519';
+                document.getElementById('securityLevel').textContent = 'STANDARD';
+                document.getElementById('quantumResistance').textContent = 'CLASSICAL';
+                document.getElementById('keyLength').textContent = '256-bit';
+            }
+        }
+
+        // Log command activity
+        function logCommand(message, type = 'success') {
+            const log = document.getElementById('commandLog');
+            const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span> 
+                <span class="log-${type}">${message}</span>
+            `;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Update status badge
+        function updateStatusBadge(badgeId, text, status) {
+            const badge = document.getElementById(badgeId);
+            badge.className = `status-badge status-${status}`;
+            badge.textContent = text;
+        }
+
+        // Simulate cryptographic processing
+        async function processCommand() {
+            const command = document.getElementById('commandInput').value.trim();
+            const cryptoType = document.getElementById('cryptoSelect').value;
+            
+            if (!command) {
+                logCommand('ERROR: COMMAND INPUT REQUIRED', 'error');
+                return;
+            }
+
+            demoState.isProcessing = true;
+            document.getElementById('executeBtn').disabled = true;
+            document.getElementById('executeBtn').innerHTML = '<i class="fas fa-spinner processing-animation"></i> PROCESSING...';
+
+            // Log command initiation
+            logCommand(`COMMAND RECEIVED: "${command}"`, 'command');
+            logCommand(`CRYPTO PROTOCOL: ${cryptoType.toUpperCase()}`, 'success');
+
+            // Reset status badges
+            updateStatusBadge('ed25519Status', 'Ed25519: PROCESSING...', 'pending');
+            updateStatusBadge('pqcStatus', 'PQC: STANDBY ⚪', 'skipped');
+            updateStatusBadge('overallStatus', 'OVERALL: PROCESSING...', 'pending');
+
+            // Simulate Ed25519 processing
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            updateStatusBadge('ed25519Status', 'Ed25519: VERIFIED ✅', 'verified');
+            logCommand('Ed25519 SIGNATURE GENERATED AND VERIFIED', 'success');
+
+            if (cryptoType === 'hybrid') {
+                // Simulate PQC processing
+                updateStatusBadge('pqcStatus', 'PQC: PROCESSING...', 'pending');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                updateStatusBadge('pqcStatus', 'PQC: VERIFIED ✅', 'verified');
+                logCommand('DILITHIUM POST-QUANTUM SIGNATURE GENERATED AND VERIFIED', 'success');
+            } else {
+                updateStatusBadge('pqcStatus', 'PQC: SKIPPED ⚪', 'skipped');
+            }
+
+            // Final verification
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            updateStatusBadge('overallStatus', 'OVERALL: SUCCESS 🚀', 'success');
+            
+            // Log completion
+            logCommand('COMMAND AUTHORIZATION COMPLETE', 'success');
+            logCommand('ROUTING TO MISSION CONTROL SYSTEMS...', 'success');
+            
+            // Simulate mission system response
+            setTimeout(() => {
+                logCommand('MISSION CONTROL ACKNOWLEDGMENT RECEIVED', 'success');
+                if (command.includes('drone')) {
+                    logCommand('DRONE UNIT ALPHA-7 RESPONDING TO SECTOR 4', 'success');
+                } else if (command.includes('Chimera')) {
+                    logCommand('ASSET CHIMERA DEPLOYMENT AUTHORIZED - STANDBY', 'success');
+                } else if (command.includes('DEFCON')) {
+                    logCommand('DEFCON 2 ALERT STATUS INITIATED ACROSS ALL COMMANDS', 'success');
+                } else {
+                    logCommand('COMMAND EXECUTED SUCCESSFULLY', 'success');
+                }
+            }, 2000);
+
+            // Store in history
+            demoState.commandHistory.push({
+                command: command,
+                crypto: cryptoType,
+                timestamp: new Date().toISOString(),
+                status: 'success'
+            });
+
+            // Reset UI
+            demoState.isProcessing = false;
+            document.getElementById('executeBtn').disabled = false;
+            document.getElementById('executeBtn').innerHTML = '<i class="fas fa-rocket"></i> GENERATE & ROUTE COMMAND';
+            document.getElementById('commandInput').value = '';
+        }
+
+        // Event listeners
+        document.getElementById('cryptoSelect').addEventListener('change', updateCryptoInfo);
+        document.getElementById('executeBtn').addEventListener('click', processCommand);
+        
+        document.getElementById('commandInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !demoState.isProcessing) {
+                processCommand();
+            }
+        });
+
+        // Initialize
+        updateCryptoInfo();
+        logCommand('SYSTEM READY FOR COMMAND INPUT', 'success');
+    </script>
+</body>
+</html>

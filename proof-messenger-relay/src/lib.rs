@@ -144,6 +144,85 @@ pub fn create_app(db: Arc<Database>) -> Router {
         .with_state(db)
 }
 
+/// Create the application router with security enhancements
+/// This includes security headers and tracing (rate limiting configured separately)
+pub fn create_app_with_security(db: Arc<Database>) -> Router {
+    use tower_http::trace::TraceLayer;
+    use tower_http::cors::CorsLayer;
+    use tower_http::set_header::SetResponseHeaderLayer;
+
+    // Create the base router
+    Router::new()
+        .route("/relay", post(relay_handler))
+        .route("/messages/:group_id", get(get_messages_handler))
+        .route("/message/:message_id", get(get_message_by_id_handler))
+        .route("/health", get(health_handler))
+        .route("/ready", get(ready_handler))
+        .with_state(db)
+        // Apply security layers
+        .layer(TraceLayer::new_for_http())
+        // Security headers
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::STRICT_TRANSPORT_SECURITY,
+            axum::http::HeaderValue::from_static("max-age=63072000; includeSubDomains"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::X_CONTENT_TYPE_OPTIONS,
+            axum::http::HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::X_FRAME_OPTIONS,
+            axum::http::HeaderValue::from_static("DENY"),
+        ))
+        // CORS layer (configure as needed)
+        .layer(CorsLayer::permissive()) // Note: Configure restrictively in production
+}
+
+/// Create the application router with full production security including rate limiting
+/// This version includes rate limiting that works in production environments
+pub fn create_app_with_rate_limiting(db: Arc<Database>) -> Router {
+    use tower_http::trace::TraceLayer;
+    use tower_http::cors::CorsLayer;
+    use tower_http::set_header::SetResponseHeaderLayer;
+    use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
+
+    // Configure rate limiting: 5 requests per burst, 1 new request every 2 seconds
+    let governor_conf = GovernorConfigBuilder::default()
+        .per_second(2)
+        .burst_size(5)
+        .finish()
+        .unwrap();
+
+    // Create the base router
+    Router::new()
+        .route("/relay", post(relay_handler))
+        .route("/messages/:group_id", get(get_messages_handler))
+        .route("/message/:message_id", get(get_message_by_id_handler))
+        .route("/health", get(health_handler))
+        .route("/ready", get(ready_handler))
+        .with_state(db)
+        // Apply security layers
+        .layer(GovernorLayer {
+            config: std::sync::Arc::new(governor_conf),
+        })
+        .layer(TraceLayer::new_for_http())
+        // Security headers
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::STRICT_TRANSPORT_SECURITY,
+            axum::http::HeaderValue::from_static("max-age=63072000; includeSubDomains"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::X_CONTENT_TYPE_OPTIONS,
+            axum::http::HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::X_FRAME_OPTIONS,
+            axum::http::HeaderValue::from_static("DENY"),
+        ))
+        // CORS layer (configure as needed)
+        .layer(CorsLayer::permissive()) // Note: Configure restrictively in production
+}
+
 /// The Axum handler for message relay
 #[instrument(skip_all)]
 async fn relay_handler(

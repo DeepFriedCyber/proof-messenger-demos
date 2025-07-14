@@ -3,10 +3,125 @@ use ed25519_dalek::{Keypair, PublicKey, SecretKey, Signature, Signer, Verifier, 
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use proof_messenger_protocol::proof::{
+    make_secure_proof, make_secure_proof_strict, verify_proof_secure, verify_proof_strict,
+    ProofError as ProtocolProofError
+};
+use proof_messenger_protocol::key::{generate_secure_keypair, SecureKeypair};
 
 // Property-based tests module
 #[cfg(test)]
 mod property_tests;
+
+// WASM-compatible error handling for rich error propagation to JavaScript
+// Since wasm-bindgen doesn't support enum variants with data, we use a struct approach
+
+#[derive(Debug, Clone)]
+pub struct WasmProofError {
+    error_type: String,
+    message: String,
+}
+
+impl WasmProofError {
+    pub fn new(error_type: &str, message: &str) -> Self {
+        Self {
+            error_type: error_type.to_string(),
+            message: message.to_string(),
+        }
+    }
+    
+    pub fn verification_failed() -> Self {
+        Self::new("VerificationFailed", "Signature verification failed")
+    }
+    
+    pub fn invalid_public_key(details: &str) -> Self {
+        Self::new("InvalidPublicKey", &format!("Invalid public key format: {}", details))
+    }
+    
+    pub fn invalid_signature(details: &str) -> Self {
+        Self::new("InvalidSignature", &format!("Invalid signature format: {}", details))
+    }
+    
+    pub fn invalid_private_key(details: &str) -> Self {
+        Self::new("InvalidPrivateKey", &format!("Invalid private key format: {}", details))
+    }
+    
+    pub fn context_too_large(max: usize, actual: usize) -> Self {
+        Self::new("ContextTooLarge", &format!("Context data is too large: {} bytes (max: {} bytes)", actual, max))
+    }
+    
+    pub fn empty_context() -> Self {
+        Self::new("EmptyContext", "Context data cannot be empty")
+    }
+    
+    pub fn invalid_input(details: &str) -> Self {
+        Self::new("InvalidInput", &format!("Invalid input data: {}", details))
+    }
+    
+    pub fn cryptographic_error(details: &str) -> Self {
+        Self::new("CryptographicError", &format!("Cryptographic operation failed: {}", details))
+    }
+    
+    pub fn serialization_error(details: &str) -> Self {
+        Self::new("SerializationError", &format!("Serialization error: {}", details))
+    }
+    
+    pub fn internal_error(details: &str) -> Self {
+        Self::new("InternalError", &format!("Internal error: {}", details))
+    }
+    
+    pub fn error_type(&self) -> &str {
+        &self.error_type
+    }
+    
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+}
+
+// Convert protocol errors to WASM errors
+impl From<ProtocolProofError> for WasmProofError {
+    fn from(error: ProtocolProofError) -> Self {
+        match error {
+            ProtocolProofError::VerificationFailed(_) => WasmProofError::verification_failed(),
+            ProtocolProofError::ContextTooLarge { max, actual } => {
+                WasmProofError::context_too_large(max, actual)
+            },
+            ProtocolProofError::EmptyContext => WasmProofError::empty_context(),
+            ProtocolProofError::InvalidInput(details) => {
+                WasmProofError::invalid_input(&details)
+            },
+            ProtocolProofError::InvalidData(details) => {
+                WasmProofError::invalid_input(&details)
+            },
+            ProtocolProofError::GenerationFailed(details) => {
+                WasmProofError::cryptographic_error(&details)
+            },
+        }
+    }
+}
+
+// Convert WASM errors to JsValue for JavaScript consumption
+impl From<WasmProofError> for JsValue {
+    fn from(error: WasmProofError) -> Self {
+        let error_obj = js_sys::Error::new(&error.message);
+        
+        // Add custom properties to the error object
+        js_sys::Reflect::set(
+            &error_obj,
+            &JsValue::from_str("errorType"),
+            &JsValue::from_str(&error.error_type),
+        ).unwrap_or_default();
+        
+        js_sys::Reflect::set(
+            &error_obj,
+            &JsValue::from_str("isProofMessengerError"),
+            &JsValue::from_bool(true),
+        ).unwrap_or_default();
+        
+        error_obj.into()
+    }
+}
 
 // Set up panic hook for better error messages in browser
 #[wasm_bindgen(start)]
@@ -93,10 +208,87 @@ pub fn make_proof_wasm(privkey_bytes: &[u8], context: &[u8]) -> Vec<u8> {
 #[wasm_bindgen]
 pub fn verify_proof_wasm(pubkey_bytes: &[u8], context: &[u8], proof_bytes: &[u8]) -> Result<bool, JsValue> {
     let pubkey = PublicKey::from_bytes(pubkey_bytes)
-        .map_err(|e| JsValue::from_str(&format!("PublicKey error: {e}")))?;
+        .map_err(|e| WasmProofError::invalid_public_key(&format!("Failed to parse public key: {}", e)))?;
     let signature = Signature::from_bytes(proof_bytes)
-        .map_err(|e| JsValue::from_str(&format!("Signature error: {e}")))?;
+        .map_err(|e| WasmProofError::invalid_signature(&format!("Failed to parse signature: {}", e)))?;
     Ok(pubkey.verify(context, &signature).is_ok())
+}
+
+/// Generate a secure keypair using the protocol's SecureKeypair
+#[wasm_bindgen]
+pub fn generate_secure_keypair_wasm() -> Result<Vec<u8>, JsValue> {
+    let secure_keypair = generate_secure_keypair();
+    Ok(secure_keypair.to_bytes().to_vec())
+}
+
+/// Generate a secure keypair with a seed for deterministic testing
+#[wasm_bindgen]
+pub fn generate_secure_keypair_with_seed_wasm(seed: u64) -> Result<Vec<u8>, JsValue> {
+    let secure_keypair = proof_messenger_protocol::key::generate_secure_keypair_with_seed(seed);
+    Ok(secure_keypair.to_bytes().to_vec())
+}
+
+/// Create a secure proof using the protocol's secure proof generation
+#[wasm_bindgen]
+pub fn make_secure_proof_wasm(keypair_bytes: &[u8], context: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let secure_keypair = SecureKeypair::from_bytes(keypair_bytes)
+        .map_err(|e| WasmProofError::invalid_private_key(&format!("Failed to parse keypair: {}", e)))?;
+    
+    let signature = make_secure_proof(&secure_keypair, context)
+        .map_err(WasmProofError::from)?;
+    
+    Ok(signature.to_bytes().to_vec())
+}
+
+/// Create a secure proof with strict validation (non-empty context required)
+#[wasm_bindgen]
+pub fn make_secure_proof_strict_wasm(keypair_bytes: &[u8], context: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let secure_keypair = SecureKeypair::from_bytes(keypair_bytes)
+        .map_err(|e| WasmProofError::invalid_private_key(&format!("Failed to parse keypair: {}", e)))?;
+    
+    let signature = make_secure_proof_strict(&secure_keypair, context)
+        .map_err(WasmProofError::from)?;
+    
+    Ok(signature.to_bytes().to_vec())
+}
+
+/// Verify a proof with secure validation
+#[wasm_bindgen]
+pub fn verify_proof_secure_wasm(pubkey_bytes: &[u8], context: &[u8], proof_bytes: &[u8]) -> Result<bool, JsValue> {
+    let pubkey = PublicKey::from_bytes(pubkey_bytes)
+        .map_err(|e| WasmProofError::invalid_public_key(&format!("Failed to parse public key: {}", e)))?;
+    
+    let signature = Signature::from_bytes(proof_bytes)
+        .map_err(|e| WasmProofError::invalid_signature(&format!("Failed to parse signature: {}", e)))?;
+    
+    verify_proof_secure(&pubkey, context, &signature)
+        .map_err(WasmProofError::from)?;
+    
+    Ok(true)
+}
+
+/// Verify a proof with strict validation (non-empty context required)
+#[wasm_bindgen]
+pub fn verify_proof_strict_wasm(pubkey_bytes: &[u8], context: &[u8], proof_bytes: &[u8]) -> Result<bool, JsValue> {
+    let pubkey = PublicKey::from_bytes(pubkey_bytes)
+        .map_err(|e| WasmProofError::invalid_public_key(&format!("Failed to parse public key: {}", e)))?;
+    
+    let signature = Signature::from_bytes(proof_bytes)
+        .map_err(|e| WasmProofError::invalid_signature(&format!("Failed to parse signature: {}", e)))?;
+    
+    verify_proof_strict(&pubkey, context, &signature)
+        .map_err(WasmProofError::from)?;
+    
+    Ok(true)
+}
+
+/// Extract public key from secure keypair bytes
+#[wasm_bindgen]
+pub fn get_public_key_from_secure_keypair(keypair_bytes: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let secure_keypair = SecureKeypair::from_bytes(keypair_bytes)
+        .map_err(|e| WasmProofError::invalid_private_key(&format!("Failed to parse keypair: {}", e)))?;
+    
+    Ok(secure_keypair.public_key_bytes().to_vec())
 }
 
 /// Validate invitation code format (16-character base32)
@@ -252,69 +444,145 @@ impl WasmMessage {
     }
 }
 
-// C. Keypair Struct/Class
+// C. Keypair Struct/Class with Secure Memory Protection
 #[wasm_bindgen]
 pub struct WasmKeyPair {
-    secret: Vec<u8>,
-    public: Vec<u8>,
+    secure_keypair: SecureKeypair,
+}
+
+// Secure WASM Keypair that uses SecureKeypair internally
+#[wasm_bindgen(js_name = "WasmSecureKeyPair")]
+pub struct WasmSecureKeyPair {
+    secure_keypair: SecureKeypair,
 }
 
 #[wasm_bindgen]
 impl WasmKeyPair {
     #[wasm_bindgen(constructor)]
     pub fn new() -> WasmKeyPair {
-        let kp = Keypair::generate(&mut OsRng);
         WasmKeyPair {
-            secret: kp.secret.to_bytes().to_vec(),
-            public: kp.public.to_bytes().to_vec(),
+            secure_keypair: generate_secure_keypair(),
         }
     }
     
     #[wasm_bindgen(js_name = from_bytes)]
     pub fn from_bytes(bytes: &[u8]) -> Result<WasmKeyPair, JsValue> {
-        if bytes.len() != SECRET_KEY_LENGTH + PUBLIC_KEY_LENGTH {
-            return Err(JsValue::from_str("Keypair bytes wrong length"));
+        let secure_keypair = SecureKeypair::from_bytes(bytes)
+            .map_err(|e| WasmProofError::invalid_private_key(&format!("Failed to parse keypair: {}", e)))?;
+        
+        Ok(WasmKeyPair { secure_keypair })
+    }
+    
+    #[wasm_bindgen(js_name = from_seed)]
+    pub fn from_seed(seed: u64) -> WasmKeyPair {
+        WasmKeyPair {
+            secure_keypair: proof_messenger_protocol::key::generate_secure_keypair_with_seed(seed),
         }
-        let secret = SecretKey::from_bytes(&bytes[0..SECRET_KEY_LENGTH])
-            .map_err(|e| JsValue::from_str(&format!("SecretKey error: {e}")))?;
-        let public = PublicKey::from_bytes(&bytes[SECRET_KEY_LENGTH..])
-            .map_err(|e| JsValue::from_str(&format!("PublicKey error: {e}")))?;
-        Ok(WasmKeyPair {
-            secret: secret.to_bytes().to_vec(),
-            public: public.to_bytes().to_vec(),
-        })
     }
     
     #[wasm_bindgen(getter, js_name = public_key_hex)]
     pub fn public_key_hex(&self) -> String {
-        hex::encode(&self.public)
+        hex::encode(self.secure_keypair.public_key_bytes())
     }
     
     #[wasm_bindgen(getter, js_name = public_key_bytes)]
     pub fn public_key_bytes(&self) -> Vec<u8> {
-        self.public.clone()
-    }
-    
-    #[wasm_bindgen(getter, js_name = private_key_bytes)]
-    pub fn private_key_bytes(&self) -> Vec<u8> {
-        self.secret.clone()
+        self.secure_keypair.public_key_bytes().to_vec()
     }
     
     #[wasm_bindgen(getter, js_name = keypair_bytes)]
     pub fn keypair_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(SECRET_KEY_LENGTH + PUBLIC_KEY_LENGTH);
-        bytes.extend_from_slice(&self.secret);
-        bytes.extend_from_slice(&self.public);
-        bytes
+        self.secure_keypair.to_bytes().to_vec()
     }
     
     pub fn sign(&self, data: &[u8]) -> Result<Vec<u8>, JsValue> {
-        let secret = SecretKey::from_bytes(&self.secret)
-            .map_err(|e| JsValue::from_str(&format!("SecretKey error: {e}")))?;
-        let public = PublicKey::from_bytes(&self.public)
-            .map_err(|e| JsValue::from_str(&format!("PublicKey error: {e}")))?;
-        let keypair = Keypair { secret, public };
-        Ok(keypair.sign(data).to_bytes().to_vec())
+        Ok(self.secure_keypair.sign(data).to_bytes().to_vec())
+    }
+    
+    pub fn sign_secure(&self, data: &[u8]) -> Result<Vec<u8>, JsValue> {
+        let signature = make_secure_proof(&self.secure_keypair, data)
+            .map_err(WasmProofError::from)?;
+        Ok(signature.to_bytes().to_vec())
+    }
+    
+    pub fn sign_strict(&self, data: &[u8]) -> Result<Vec<u8>, JsValue> {
+        let signature = make_secure_proof_strict(&self.secure_keypair, data)
+            .map_err(WasmProofError::from)?;
+        Ok(signature.to_bytes().to_vec())
+    }
+}
+
+#[wasm_bindgen]
+impl WasmSecureKeyPair {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> WasmSecureKeyPair {
+        WasmSecureKeyPair {
+            secure_keypair: generate_secure_keypair(),
+        }
+    }
+    
+    #[wasm_bindgen(js_name = from_bytes)]
+    pub fn from_bytes(bytes: &[u8]) -> Result<WasmSecureKeyPair, JsValue> {
+        let secure_keypair = SecureKeypair::from_bytes(bytes)
+            .map_err(|e| WasmProofError::invalid_private_key(&format!("Failed to parse secure keypair: {}", e)))?;
+        
+        Ok(WasmSecureKeyPair { secure_keypair })
+    }
+    
+    #[wasm_bindgen(js_name = from_seed)]
+    pub fn from_seed(seed: u64) -> WasmSecureKeyPair {
+        WasmSecureKeyPair {
+            secure_keypair: proof_messenger_protocol::key::generate_secure_keypair_with_seed(seed),
+        }
+    }
+    
+    #[wasm_bindgen(getter, js_name = public_key_hex)]
+    pub fn public_key_hex(&self) -> String {
+        hex::encode(self.secure_keypair.public_key_bytes())
+    }
+    
+    #[wasm_bindgen(getter, js_name = public_key_bytes)]
+    pub fn public_key_bytes(&self) -> Vec<u8> {
+        self.secure_keypair.public_key_bytes().to_vec()
+    }
+    
+    #[wasm_bindgen(getter, js_name = keypair_bytes)]
+    pub fn keypair_bytes(&self) -> Vec<u8> {
+        self.secure_keypair.to_bytes().to_vec()
+    }
+    
+    pub fn sign(&self, data: &[u8]) -> Result<Vec<u8>, JsValue> {
+        let signature = make_secure_proof(&self.secure_keypair, data)
+            .map_err(WasmProofError::from)?;
+        Ok(signature.to_bytes().to_vec())
+    }
+    
+    pub fn sign_strict(&self, data: &[u8]) -> Result<Vec<u8>, JsValue> {
+        let signature = make_secure_proof_strict(&self.secure_keypair, data)
+            .map_err(WasmProofError::from)?;
+        Ok(signature.to_bytes().to_vec())
+    }
+    
+    pub fn verify(&self, data: &[u8], signature_bytes: &[u8]) -> Result<bool, JsValue> {
+        let signature = Signature::from_bytes(signature_bytes)
+            .map_err(|e| WasmProofError::invalid_signature(&format!("Failed to parse signature: {}", e)))?;
+        
+        let public_key = self.secure_keypair.public_key();
+        verify_proof_secure(&public_key, data, &signature)
+            .map_err(WasmProofError::from)?;
+        
+        Ok(true)
+    }
+    
+    pub fn verify_strict(&self, data: &[u8], signature_bytes: &[u8]) -> Result<bool, JsValue> {
+        let signature = Signature::from_bytes(signature_bytes)
+            .map_err(|e| WasmProofError::invalid_signature(&format!("Failed to parse signature: {}", e)))?;
+        
+        let public_key = self.secure_keypair.public_key();
+        verify_proof_strict(&public_key, data, &signature)
+            .map_err(WasmProofError::from)?;
+        
+        Ok(true)
     }
 }
 

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlobalCorp Bank - Multi-Party Wire Transfer Authorization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .demo-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .status-alert {
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .status-pending { border-left-color: #ffc107; background-color: #fff3cd; }
+        .status-success { border-left-color: #28a745; background-color: #d4edda; }
+        .form-readonly input, .form-readonly textarea, .form-readonly select {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        .notification-badge {
+            position: relative;
+        }
+        .notification-badge::after {
+            content: '!';
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .proof-log {
+            background: #1e1e1e;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .json-key { color: #9cdcfe; }
+        .json-string { color: #ce9178; }
+        .json-number { color: #b5cea8; }
+        .json-boolean { color: #569cd6; }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-university"></i> GlobalCorp Bank</h1>
+                    <p class="lead mb-0">Multi-Party Wire Transfer Authorization System</p>
+                    <small>Powered by Proof-Messenger Protocol</small>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="badge bg-success fs-6">
+                        <i class="fas fa-shield-alt"></i> Layer 2 Authorization Active
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Status Alert -->
+        <div id="statusAlert" class="status-alert d-none">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>
+                <span id="statusText">Ready to initiate transfer</span>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs mb-4" id="roleTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="initiator-tab" data-bs-toggle="tab" data-bs-target="#initiator" type="button" role="tab">
+                    <i class="fas fa-user"></i> Initiator
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="manager-tab" data-bs-toggle="tab" data-bs-target="#manager" type="button" role="tab">
+                    <i class="fas fa-user-tie"></i> Manager
+                    <span id="managerBadge" class="d-none notification-badge"></span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cfo-tab" data-bs-toggle="tab" data-bs-target="#cfo" type="button" role="tab">
+                    <i class="fas fa-crown"></i> CFO
+                    <span id="cfoBadge" class="d-none notification-badge"></span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="roleTabContent">
+            <!-- Initiator Tab -->
+            <div class="tab-pane fade show active" id="initiator" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-paper-plane"></i> Wire Transfer Request</h5>
+                            </div>
+                            <div class="card-body">
+                                <form id="transferForm">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="amount" class="form-label">Transfer Amount</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    <input type="text" class="form-control" id="amount" value="1,000,000.00" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="recipient" class="form-label">Recipient</label>
+                                                <input type="text" class="form-control" id="recipient" value="ACME Corp" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="reason" class="form-label">Transfer Reason</label>
+                                        <textarea class="form-control" id="reason" rows="3" required>Q4 Infrastructure Purchase</textarea>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="accountFrom" class="form-label">From Account</label>
+                                                <select class="form-select" id="accountFrom" required>
+                                                    <option value="ops-001">Operations Account (***-001)</option>
+                                                    <option value="cap-002">Capital Account (***-002)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="recipientAccount" class="form-label">Recipient Account</label>
+                                                <input type="text" class="form-control" id="recipientAccount" value="ACME-CORP-ROUTING-001" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                            <i class="fas fa-paper-plane"></i> Submit for Approval
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-info-circle"></i> Transfer Info</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <strong>Initiated By:</strong><br>
+                                    <small class="text-muted">Sarah Johnson (Ops Manager)</small>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Approval Chain:</strong><br>
+                                    <small class="text-muted">Manager → CFO → Execute</small>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Security Level:</strong><br>
+                                    <span class="badge bg-warning">High Value ($1M+)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manager Tab -->
+            <div class="tab-pane fade" id="manager" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-clipboard-check"></i> Manager Review & Approval</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-lock"></i> <strong>Immutable Context:</strong> 
+                                    The transfer details below are cryptographically locked and cannot be modified.
+                                </div>
+                                <form id="managerForm" class="form-readonly">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Transfer Amount</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    <input type="text" class="form-control" value="1,000,000.00" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Recipient</label>
+                                                <input type="text" class="form-control" value="ACME Corp" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Transfer Reason</label>
+                                        <textarea class="form-control" rows="3" readonly>Q4 Infrastructure Purchase</textarea>
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="button" class="btn btn-success btn-lg" id="managerApproveBtn" disabled>
+                                            <i class="fas fa-check"></i> Approve Transfer
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-user-shield"></i> Manager Authority</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <strong>Reviewing As:</strong><br>
+                                    <small class="text-muted">Michael Chen (Finance Manager)</small>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Approval Limit:</strong><br>
+                                    <small class="text-muted">Up to $5,000,000</small>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Context Hash:</strong><br>
+                                    <small class="font-monospace text-muted">a7f3c9e2...</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CFO Tab -->
+            <div class="tab-pane fade" id="cfo" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-stamp"></i> CFO Final Authorization</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-exclamation-triangle"></i> <strong>Final Approval:</strong> 
+                                    This action will authorize the wire transfer and cannot be undone.
+                                </div>
+                                <form id="cfoForm" class="form-readonly">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Transfer Amount</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    <input type="text" class="form-control" value="1,000,000.00" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Recipient</label>
+                                                <input type="text" class="form-control" value="ACME Corp" readonly>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Transfer Reason</label>
+                                        <textarea class="form-control" rows="3" readonly>Q4 Infrastructure Purchase</textarea>
+                                    </div>
+                                    <div class="d-grid">
+                                        <button type="button" class="btn btn-danger btn-lg" id="cfoFinalizeBtn" disabled>
+                                            <i class="fas fa-gavel"></i> Finalize & Authorize
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-crown"></i> CFO Authority</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <strong>Authorizing As:</strong><br>
+                                    <small class="text-muted">Jennifer Walsh (Chief Financial Officer)</small>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Approval Limit:</strong><br>
+                                    <small class="text-muted">Unlimited</small>
+                                </div>
+                                <div class="mb-2">
+                                    <strong>Signatures Required:</strong><br>
+                                    <span class="badge bg-success">Initiator ✓</span>
+                                    <span class="badge bg-success">Manager ✓</span>
+                                    <span class="badge bg-secondary">CFO ⏳</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Protocol Activity Log -->
+        <div class="mt-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-terminal"></i> Protocol Activity Log</h5>
+                    <small class="text-muted">Real-time proof generation and verification</small>
+                </div>
+                <div class="card-body">
+                    <div id="protocolLog" class="proof-log">
+                        <div>Proof-Messenger Protocol v2.0 - Ready</div>
+                        <div>Waiting for transfer initiation...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        // Import WASM module (this would be the actual import in production)
+        // import init, { WasmKeyPair, make_secure_proof_wasm } from './pkg/proof_messenger_web.js';
+        
+        // Demo state
+        let demoState = {
+            currentStep: 'initiator',
+            transferContext: null,
+            proofs: [],
+            keypairs: {
+                initiator: null,
+                manager: null,
+                cfo: null
+            }
+        };
+
+        // Simulate WASM functions for demo
+        function simulateWasmKeyPair() {
+            return {
+                public_key_hex: Math.random().toString(36).substring(2, 15),
+                sign: (data) => new Uint8Array(64).fill(Math.floor(Math.random() * 256))
+            };
+        }
+
+        function simulateProofGeneration(context, role) {
+            return {
+                context_hash: btoa(JSON.stringify(context)).substring(0, 16),
+                signature: Array.from(new Uint8Array(64).fill(Math.floor(Math.random() * 256))),
+                public_key: demoState.keypairs[role].public_key_hex,
+                timestamp: new Date().toISOString(),
+                role: role
+            };
+        }
+
+        // Initialize demo
+        function initDemo() {
+            // Generate keypairs for each role
+            demoState.keypairs.initiator = simulateWasmKeyPair();
+            demoState.keypairs.manager = simulateWasmKeyPair();
+            demoState.keypairs.cfo = simulateWasmKeyPair();
+
+            logToProtocol('Keypairs generated for all roles');
+            logToProtocol('System ready for multi-party authorization');
+        }
+
+        // Protocol logging
+        function logToProtocol(message, data = null) {
+            const log = document.getElementById('protocolLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            if (data) {
+                log.innerHTML += `\n[${timestamp}] ${message}`;
+                log.innerHTML += `\n<span class="json-key">${JSON.stringify(data, null, 2)}</span>`;
+            } else {
+                log.innerHTML += `\n[${timestamp}] ${message}`;
+            }
+            
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Update status alert
+        function updateStatus(message, type = 'info') {
+            const alert = document.getElementById('statusAlert');
+            const text = document.getElementById('statusText');
+            
+            alert.className = `status-alert status-${type}`;
+            alert.classList.remove('d-none');
+            text.textContent = message;
+        }
+
+        // Handle form submission (Initiator)
+        document.getElementById('transferForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Capture transfer context
+            demoState.transferContext = {
+                amount: document.getElementById('amount').value,
+                recipient: document.getElementById('recipient').value,
+                reason: document.getElementById('reason').value,
+                accountFrom: document.getElementById('accountFrom').value,
+                recipientAccount: document.getElementById('recipientAccount').value,
+                timestamp: new Date().toISOString()
+            };
+
+            // Generate initiator proof
+            const proof = simulateProofGeneration(demoState.transferContext, 'initiator');
+            demoState.proofs.push(proof);
+
+            // Update UI
+            document.getElementById('transferForm').classList.add('form-readonly');
+            document.querySelectorAll('#transferForm input, #transferForm textarea, #transferForm select').forEach(el => {
+                el.readOnly = true;
+                el.disabled = true;
+            });
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-check"></i> Submitted';
+
+            // Enable manager tab
+            document.getElementById('managerBadge').classList.remove('d-none');
+            document.getElementById('managerApproveBtn').disabled = false;
+
+            updateStatus('Pending Manager Approval', 'pending');
+            logToProtocol('Transfer initiated by Sarah Johnson', demoState.transferContext);
+            logToProtocol('Initiator proof generated', proof);
+        });
+
+        // Handle manager approval
+        document.getElementById('managerApproveBtn').addEventListener('click', function() {
+            // Generate manager proof
+            const proof = simulateProofGeneration(demoState.transferContext, 'manager');
+            demoState.proofs.push(proof);
+
+            // Update UI
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-check"></i> Approved';
+            document.getElementById('managerBadge').classList.add('d-none');
+            document.getElementById('cfoBadge').classList.remove('d-none');
+            document.getElementById('cfoFinalizeBtn').disabled = false;
+
+            updateStatus('Pending CFO Final Approval', 'pending');
+            logToProtocol('Manager approval by Michael Chen', proof);
+        });
+
+        // Handle CFO finalization
+        document.getElementById('cfoFinalizeBtn').addEventListener('click', function() {
+            // Generate CFO proof
+            const proof = simulateProofGeneration(demoState.transferContext, 'cfo');
+            demoState.proofs.push(proof);
+
+            // Create final proof bundle
+            const proofBundle = {
+                transfer_context: demoState.transferContext,
+                proofs: demoState.proofs,
+                status: 'AUTHORIZED',
+                authorization_complete: true
+            };
+
+            // Update UI
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-check"></i> Authorized';
+            document.getElementById('cfoBadge').classList.add('d-none');
+
+            updateStatus('✅ SUCCESS: $1,000,000 wire to ACME Corp has been authorized by all parties', 'success');
+            logToProtocol('CFO final authorization by Jennifer Walsh', proof);
+            logToProtocol('TRANSFER AUTHORIZED - Sending to Banking System API', proofBundle);
+            
+            // Simulate banking system response
+            setTimeout(() => {
+                logToProtocol('Banking System Response: Transfer queued for execution');
+                logToProtocol('Wire transfer will be processed within 24 hours');
+            }, 2000);
+        });
+
+        // Initialize the demo
+        initDemo();
+    </script>
+</body>
+</html>

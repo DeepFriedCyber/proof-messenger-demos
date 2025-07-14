@@ -8,6 +8,7 @@ ed25519-dalek = "1.0.1"
 rand = "0.7"
 wasm-bindgen = { version = "0.2", optional = true }
 thiserror = "1.0"
+zeroize = { version = "1.7", features = ["zeroize_derive"] }
 
 [dev-dependencies]
 proptest = "1.4"

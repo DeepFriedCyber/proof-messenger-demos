@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LegalTech Pro - Sequential Document Signing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .demo-header {
+            background: linear-gradient(135deg, #6f42c1 0%, #495057 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .stepper {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .step {
+            border: 2px solid #dee2e6;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        .step.active {
+            border-color: #007bff;
+            background: linear-gradient(to right, #f8f9fa 0%, #ffffff 100%);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.1);
+        }
+        .step.completed {
+            border-color: #28a745;
+            background: linear-gradient(to right, #d4edda 0%, #ffffff 100%);
+        }
+        .step.collapsed {
+            padding: 1rem 1.5rem;
+        }
+        .step-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #6c757d;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        .step.active .step-number {
+            background: #007bff;
+        }
+        .step.completed .step-number {
+            background: #28a745;
+        }
+        .document-editor {
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            background: #ffffff;
+            min-height: 300px;
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+        }
+        .document-readonly {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        .signature-area {
+            border: 2px dashed #007bff;
+            border-radius: 0.375rem;
+            padding: 2rem;
+            text-align: center;
+            margin: 1rem 0;
+            background: linear-gradient(45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), 
+                        linear-gradient(45deg, transparent 75%, #f8f9fa 75%), 
+                        linear-gradient(-45deg, transparent 75%, #f8f9fa 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+        .signature-completed {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .proof-bundle {
+            background: #1e1e1e;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.875rem;
+        }
+        .json-key { color: #9cdcfe; }
+        .json-string { color: #ce9178; }
+        .json-number { color: #b5cea8; }
+        .json-boolean { color: #569cd6; }
+        .step-content {
+            transition: all 0.3s ease;
+        }
+        .step.collapsed .step-content {
+            display: none;
+        }
+        .download-section {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-gavel"></i> LegalTech Pro</h1>
+                    <p class="lead mb-0">Sequential Document Signing with Verifiable Proof Bundles</p>
+                    <small>Cryptographically Secure • Legally Binding • Self-Verifiable</small>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="badge bg-warning fs-6">
+                        <i class="fas fa-certificate"></i> Digital Signature Ready
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Stepper Component -->
+                <div class="stepper">
+                    <!-- Step 1: Lawyer A -->
+                    <div class="step active" id="step1">
+                        <div class="step-header">
+                            <div class="d-flex align-items-center">
+                                <div class="step-number">1</div>
+                                <div>
+                                    <h5 class="mb-0">Lawyer A - Draft & Sign</h5>
+                                    <small class="text-muted">Jennifer Walsh, Senior Partner</small>
+                                </div>
+                            </div>
+                            <div class="step-status">
+                                <span class="badge bg-primary">Active</span>
+                            </div>
+                        </div>
+                        <div class="step-content">
+                            <div class="document-editor" id="documentEditor" contenteditable="true">
+                                <h4 style="text-align: center; margin-bottom: 2rem;">SOFTWARE DEVELOPMENT AGREEMENT</h4>
+                                
+                                <p><strong>This Agreement</strong> is entered into on <strong>July 15, 2025</strong>, between:</p>
+                                
+                                <p><strong>CLIENT:</strong> GlobalCorp Industries, LLC<br>
+                                Address: 123 Business Plaza, Suite 500, New York, NY 10001</p>
+                                
+                                <p><strong>DEVELOPER:</strong> TechSolutions Pro, Inc.<br>
+                                Address: 456 Innovation Drive, San Francisco, CA 94105</p>
+                                
+                                <h5>1. SCOPE OF WORK</h5>
+                                <p>Developer agrees to create a custom enterprise resource planning (ERP) system with the following specifications:</p>
+                                <ul>
+                                    <li>User management and authentication system</li>
+                                    <li>Financial reporting and analytics dashboard</li>
+                                    <li>Inventory management module</li>
+                                    <li>Customer relationship management (CRM) integration</li>
+                                    <li>Mobile-responsive web interface</li>
+                                </ul>
+                                
+                                <h5>2. COMPENSATION</h5>
+                                <p>Total project cost: <strong>$485,000</strong> (Four Hundred Eighty-Five Thousand Dollars)</p>
+                                <p>Payment schedule:</p>
+                                <ul>
+                                    <li>25% upon contract signing: $121,250</li>
+                                    <li>25% upon completion of Phase 1: $121,250</li>
+                                    <li>25% upon completion of Phase 2: $121,250</li>
+                                    <li>25% upon final delivery and acceptance: $121,250</li>
+                                </ul>
+                                
+                                <h5>3. TIMELINE</h5>
+                                <p>Project completion date: <strong>December 15, 2025</strong></p>
+                                <p>Key milestones:</p>
+                                <ul>
+                                    <li>Phase 1 (Core System): September 30, 2025</li>
+                                    <li>Phase 2 (Advanced Features): November 15, 2025</li>
+                                    <li>Testing & Deployment: December 15, 2025</li>
+                                </ul>
+                                
+                                <h5>4. INTELLECTUAL PROPERTY</h5>
+                                <p>All custom code and documentation created specifically for this project shall be owned by the Client upon final payment. Developer retains rights to any pre-existing intellectual property and general methodologies.</p>
+                                
+                                <h5>5. CONFIDENTIALITY</h5>
+                                <p>Both parties agree to maintain strict confidentiality regarding proprietary information shared during this engagement.</p>
+                            </div>
+                            
+                            <div class="signature-area" id="signature1">
+                                <i class="fas fa-pen-fancy fs-2 text-primary mb-2"></i>
+                                <p class="mb-0"><strong>Click to Sign as Lawyer A</strong></p>
+                                <small class="text-muted">Jennifer Walsh, Senior Partner</small>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button class="btn btn-primary btn-lg" id="signStep1">
+                                    <i class="fas fa-signature"></i> Sign Draft
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Lawyer B -->
+                    <div class="step" id="step2">
+                        <div class="step-header">
+                            <div class="d-flex align-items-center">
+                                <div class="step-number">2</div>
+                                <div>
+                                    <h5 class="mb-0">Lawyer B - Review & Co-Sign</h5>
+                                    <small class="text-muted">Michael Chen, Contract Specialist</small>
+                                </div>
+                            </div>
+                            <div class="step-status">
+                                <span class="badge bg-secondary">Waiting</span>
+                            </div>
+                        </div>
+                        <div class="step-content" style="display: none;">
+                            <div class="alert alert-info">
+                                <i class="fas fa-lock"></i> <strong>Document Locked:</strong> 
+                                The contract is now immutable and ready for co-signature.
+                            </div>
+                            
+                            <div class="signature-area" id="signature2">
+                                <i class="fas fa-pen-fancy fs-2 text-warning mb-2"></i>
+                                <p class="mb-0"><strong>Click to Co-Sign as Lawyer B</strong></p>
+                                <small class="text-muted">Michael Chen, Contract Specialist</small>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button class="btn btn-warning btn-lg" id="signStep2" disabled>
+                                    <i class="fas fa-signature"></i> Review & Co-Sign
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Client -->
+                    <div class="step" id="step3">
+                        <div class="step-header">
+                            <div class="d-flex align-items-center">
+                                <div class="step-number">3</div>
+                                <div>
+                                    <h5 class="mb-0">Client - Final Approval</h5>
+                                    <small class="text-muted">GlobalCorp Industries, LLC</small>
+                                </div>
+                            </div>
+                            <div class="step-status">
+                                <span class="badge bg-secondary">Waiting</span>
+                            </div>
+                        </div>
+                        <div class="step-content" style="display: none;">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> <strong>Final Approval:</strong> 
+                                This action will finalize the contract and make it legally binding.
+                            </div>
+                            
+                            <div class="signature-area" id="signature3">
+                                <i class="fas fa-pen-fancy fs-2 text-success mb-2"></i>
+                                <p class="mb-0"><strong>Click to Approve as Client</strong></p>
+                                <small class="text-muted">Robert Johnson, CEO</small>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button class="btn btn-success btn-lg" id="signStep3" disabled>
+                                    <i class="fas fa-gavel"></i> Approve & Finalize
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Finalized Document Bundle -->
+                <div id="finalizedSection" style="display: none;">
+                    <div class="download-section">
+                        <h4><i class="fas fa-certificate"></i> Contract Finalized!</h4>
+                        <p class="mb-3">Your verifiable proof bundle is ready for download.</p>
+                        <button class="btn btn-light btn-lg" id="downloadBundle">
+                            <i class="fas fa-download"></i> Download Verifiable Bundle (.json)
+                        </button>
+                        <p class="mt-2 mb-0">
+                            <small>This bundle contains the complete contract with all signatures and can be verified independently.</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <!-- Signature Progress -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6><i class="fas fa-tasks"></i> Signature Progress</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Lawyer A</span>
+                                <span id="progress1" class="badge bg-secondary">Pending</span>
+                            </div>
+                            <div class="progress mb-2">
+                                <div class="progress-bar" id="progressBar1" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Lawyer B</span>
+                                <span id="progress2" class="badge bg-secondary">Pending</span>
+                            </div>
+                            <div class="progress mb-2">
+                                <div class="progress-bar" id="progressBar2" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span>Client</span>
+                                <span id="progress3" class="badge bg-secondary">Pending</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar" id="progressBar3" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Info -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6><i class="fas fa-info-circle"></i> Document Info</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <strong>Document Type:</strong><br>
+                            <small class="text-muted">Software Development Agreement</small>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Contract Value:</strong><br>
+                            <small class="text-muted">$485,000</small>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Document Hash:</strong><br>
+                            <small class="font-monospace text-muted" id="documentHash">Calculating...</small>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Security Level:</strong><br>
+                            <span class="badge bg-success">Enterprise Grade</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proof Bundle Preview -->
+                <div class="card" id="bundlePreview" style="display: none;">
+                    <div class="card-header">
+                        <h6><i class="fas fa-file-code"></i> Proof Bundle Preview</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="bundleContent" class="proof-bundle">
+                            Loading bundle...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        // Demo state
+        let demoState = {
+            currentStep: 1,
+            signatures: [],
+            documentContent: '',
+            documentHash: '',
+            proofBundle: null
+        };
+
+        // Simulate cryptographic functions
+        function generateHash(content) {
+            // Simple hash simulation for demo
+            let hash = 0;
+            for (let i = 0; i < content.length; i++) {
+                const char = content.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash; // Convert to 32-bit integer
+            }
+            return Math.abs(hash).toString(16).padStart(8, '0');
+        }
+
+        function generateSignature(content, signer) {
+            return {
+                signer: signer,
+                timestamp: new Date().toISOString(),
+                signature: Array.from(new Uint8Array(64).fill(Math.floor(Math.random() * 256))),
+                public_key: Math.random().toString(36).substring(2, 15),
+                content_hash: generateHash(content)
+            };
+        }
+
+        // Initialize document hash
+        function updateDocumentHash() {
+            demoState.documentContent = document.getElementById('documentEditor').textContent;
+            demoState.documentHash = generateHash(demoState.documentContent);
+            document.getElementById('documentHash').textContent = demoState.documentHash + '...';
+        }
+
+        // Update step UI
+        function updateStep(stepNumber, status) {
+            const step = document.getElementById(`step${stepNumber}`);
+            const statusBadge = step.querySelector('.step-status .badge');
+            const progressBadge = document.getElementById(`progress${stepNumber}`);
+            const progressBar = document.getElementById(`progressBar${stepNumber}`);
+
+            if (status === 'completed') {
+                step.classList.remove('active');
+                step.classList.add('completed', 'collapsed');
+                statusBadge.className = 'badge bg-success';
+                statusBadge.textContent = 'Completed';
+                progressBadge.className = 'badge bg-success';
+                progressBadge.textContent = 'Signed';
+                progressBar.style.width = '100%';
+                progressBar.className = 'progress-bar bg-success';
+            } else if (status === 'active') {
+                step.classList.add('active');
+                step.classList.remove('completed', 'collapsed');
+                step.querySelector('.step-content').style.display = 'block';
+                statusBadge.className = 'badge bg-primary';
+                statusBadge.textContent = 'Active';
+                progressBadge.className = 'badge bg-primary';
+                progressBadge.textContent = 'In Progress';
+                progressBar.style.width = '50%';
+                progressBar.className = 'progress-bar bg-primary';
+            }
+        }
+
+        // Step 1: Lawyer A signs
+        document.getElementById('signStep1').addEventListener('click', function() {
+            // Lock document editing
+            document.getElementById('documentEditor').contentEditable = false;
+            document.getElementById('documentEditor').classList.add('document-readonly');
+            
+            // Generate signature
+            const signature = generateSignature(demoState.documentContent, 'Jennifer Walsh (Lawyer A)');
+            demoState.signatures.push(signature);
+            
+            // Update signature area
+            document.getElementById('signature1').classList.add('signature-completed');
+            document.getElementById('signature1').innerHTML = `
+                <i class="fas fa-check-circle fs-2 text-success mb-2"></i>
+                <p class="mb-0"><strong>Signed by Jennifer Walsh</strong></p>
+                <small class="text-muted">${new Date().toLocaleString()}</small>
+            `;
+            
+            // Update UI
+            updateStep(1, 'completed');
+            updateStep(2, 'active');
+            document.getElementById('signStep2').disabled = false;
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-check"></i> Signed';
+        });
+
+        // Step 2: Lawyer B co-signs
+        document.getElementById('signStep2').addEventListener('click', function() {
+            const signature = generateSignature(demoState.documentContent, 'Michael Chen (Lawyer B)');
+            demoState.signatures.push(signature);
+            
+            // Update signature area
+            document.getElementById('signature2').classList.add('signature-completed');
+            document.getElementById('signature2').innerHTML = `
+                <i class="fas fa-check-circle fs-2 text-success mb-2"></i>
+                <p class="mb-0"><strong>Co-Signed by Michael Chen</strong></p>
+                <small class="text-muted">${new Date().toLocaleString()}</small>
+            `;
+            
+            // Update UI
+            updateStep(2, 'completed');
+            updateStep(3, 'active');
+            document.getElementById('signStep3').disabled = false;
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-check"></i> Co-Signed';
+        });
+
+        // Step 3: Client finalizes
+        document.getElementById('signStep3').addEventListener('click', function() {
+            const signature = generateSignature(demoState.documentContent, 'Robert Johnson (Client)');
+            demoState.signatures.push(signature);
+            
+            // Create proof bundle
+            demoState.proofBundle = {
+                document: {
+                    title: "Software Development Agreement",
+                    content: demoState.documentContent,
+                    hash: demoState.documentHash,
+                    created: new Date().toISOString()
+                },
+                signatures: demoState.signatures,
+                verification: {
+                    all_parties_signed: true,
+                    signature_count: demoState.signatures.length,
+                    document_integrity: "verified",
+                    legal_status: "binding"
+                },
+                metadata: {
+                    contract_value: "$485,000",
+                    parties: ["GlobalCorp Industries, LLC", "TechSolutions Pro, Inc."],
+                    completion_date: new Date().toISOString(),
+                    proof_messenger_version: "v2.0"
+                }
+            };
+            
+            // Update signature area
+            document.getElementById('signature3').classList.add('signature-completed');
+            document.getElementById('signature3').innerHTML = `
+                <i class="fas fa-check-circle fs-2 text-success mb-2"></i>
+                <p class="mb-0"><strong>Finalized by Robert Johnson</strong></p>
+                <small class="text-muted">${new Date().toLocaleString()}</small>
+            `;
+            
+            // Update UI
+            updateStep(3, 'completed');
+            document.getElementById('finalizedSection').style.display = 'block';
+            document.getElementById('bundlePreview').style.display = 'block';
+            
+            // Show bundle preview
+            document.getElementById('bundleContent').innerHTML = JSON.stringify(demoState.proofBundle, null, 2);
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-check"></i> Finalized';
+        });
+
+        // Download bundle
+        document.getElementById('downloadBundle').addEventListener('click', function() {
+            const dataStr = JSON.stringify(demoState.proofBundle, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `software_development_agreement_${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Initialize
+        updateDocumentHash();
+        
+        // Update hash when document is edited
+        document.getElementById('documentEditor').addEventListener('input', updateDocumentHash);
+    </script>
+</body>
+</html>

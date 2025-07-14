@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proof-Messenger Protocol - Interactive Demos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 0;
+            margin-bottom: 3rem;
+        }
+        .demo-card {
+            border: none;
+            border-radius: 1rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            overflow: hidden;
+        }
+        .demo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        .demo-card .card-header {
+            border: none;
+            padding: 2rem 2rem 1rem;
+            background: transparent;
+        }
+        .demo-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            margin: 0 auto 1rem;
+        }
+        .fintech-icon { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
+        .healthcare-icon { background: linear-gradient(135deg, #2c5aa0 0%, #1e3c72 100%); }
+        .legal-icon { background: linear-gradient(135deg, #6f42c1 0%, #495057 100%); }
+        .government-icon { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+        .feature-list i {
+            color: #28a745;
+            margin-right: 0.5rem;
+        }
+        .demo-btn {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            border: none;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            width: 100%;
+            text-align: center;
+        }
+        .demo-btn:hover {
+            background: linear-gradient(45deg, #0056b3, #004085);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,123,255,0.3);
+        }
+        .comparison-section {
+            background: #f8f9fa;
+            padding: 3rem 0;
+            margin: 3rem 0;
+        }
+        .comparison-table {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+            font-weight: 600;
+        }
+        .table td {
+            padding: 1rem 1.5rem;
+            border-color: #f0f0f0;
+        }
+        .check-icon {
+            color: #28a745;
+            font-size: 1.2rem;
+        }
+        .x-icon {
+            color: #dc3545;
+            font-size: 1.2rem;
+        }
+        .stats-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 0;
+            margin: 3rem 0;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+        }
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-4">Proof-Messenger Protocol</h1>
+                    <p class="lead mb-4">A Programmable Proof Protocol for Secure Enterprise Workflows</p>
+                    <h3 class="h4 mb-4">Passkeys solved login. We solve trust.</h3>
+                    <p class="mb-4">Experience the future of authorization with our interactive demos showcasing Layer 2 programmable proofs across critical industries.</p>
+                </div>
+                <div class="col-lg-4 text-center">
+                    <div class="bg-white bg-opacity-10 rounded-3 p-4">
+                        <h5>🚀 Live Demos Ready</h5>
+                        <p class="mb-0">Click any demo below to see Proof-Messenger in action</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Cards -->
+    <div class="container">
+        <div class="row g-4 mb-5">
+            <!-- FinTech Demo -->
+            <div class="col-lg-6">
+                <div class="card demo-card">
+                    <div class="card-header text-center">
+                        <div class="demo-icon fintech-icon">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <h4>💰 FinTech: Multi-Party Wire Transfer</h4>
+                        <p class="text-muted">GlobalCorp Bank Authorization System</p>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Objective:</strong> Demonstrate multi-party authorization with immutable transaction context and non-repudiable audit trail.</p>
+                        
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Sequential approval workflow (Initiator → Manager → CFO)</li>
+                            <li><i class="fas fa-check"></i> Cryptographically locked transaction details</li>
+                            <li><i class="fas fa-check"></i> Real-time proof generation and verification</li>
+                            <li><i class="fas fa-check"></i> Complete audit trail for compliance</li>
+                        </ul>
+                        
+                        <div class="mt-4">
+                            <strong>The "Aha!" Moment:</strong>
+                            <p class="small text-muted">When switching between roles, the audience sees transaction details are locked and immutable, proving all parties sign the exact same context.</p>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="fintech-wire-transfer.html" class="demo-btn">
+                            <i class="fas fa-play"></i> Launch FinTech Demo
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Healthcare Demo -->
+            <div class="col-lg-6">
+                <div class="card demo-card">
+                    <div class="card-header text-center">
+                        <div class="demo-icon healthcare-icon">
+                            <i class="fas fa-hospital"></i>
+                        </div>
+                        <h4>🏥 Healthcare: Privacy-Proof Record Access</h4>
+                        <p class="text-muted">MedSecure Hospital System</p>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Objective:</strong> Show fine-grained, patient-driven consent unlocking specific encrypted resources with compliance trail.</p>
+                        
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Doctor requests specific medical record access</li>
+                            <li><i class="fas fa-check"></i> Patient provides biometric consent authorization</li>
+                            <li><i class="fas fa-check"></i> Records remain encrypted until consent granted</li>
+                            <li><i class="fas fa-check"></i> Automatic HIPAA compliance logging</li>
+                        </ul>
+                        
+                        <div class="mt-4">
+                            <strong>The "Aha!" Moment:</strong>
+                            <p class="small text-muted">The instant the compliance log populates with verifiable, human-readable entries when the doctor accesses the file, making auditing tangible and automatic.</p>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="healthcare-record-access.html" class="demo-btn">
+                            <i class="fas fa-play"></i> Launch Healthcare Demo
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legal Demo -->
+            <div class="col-lg-6">
+                <div class="card demo-card">
+                    <div class="card-header text-center">
+                        <div class="demo-icon legal-icon">
+                            <i class="fas fa-gavel"></i>
+                        </div>
+                        <h4>📜 Legal: Document Signing</h4>
+                        <p class="text-muted">LegalTech Pro Sequential Signing</p>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Objective:</strong> Demonstrate sequential signing workflow resulting in portable, self-verifiable proof bundle.</p>
+                        
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Step-by-step signing process (Lawyer A → Lawyer B → Client)</li>
+                            <li><i class="fas fa-check"></i> Document becomes immutable after first signature</li>
+                            <li><i class="fas fa-check"></i> Visual progress tracking and validation</li>
+                            <li><i class="fas fa-check"></i> Downloadable verifiable proof bundle</li>
+                        </ul>
+                        
+                        <div class="mt-4">
+                            <strong>The "Aha!" Moment:</strong>
+                            <p class="small text-muted">Downloading the final bundle transforms the process into a tangible, portable asset that can be verified anywhere without the original application.</p>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="legal-document-signing.html" class="demo-btn">
+                            <i class="fas fa-play"></i> Launch Legal Demo
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Government Demo -->
+            <div class="col-lg-6">
+                <div class="card demo-card">
+                    <div class="card-header text-center">
+                        <div class="demo-icon government-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4>🧾 Government: Post-Quantum Secure Command</h4>
+                        <p class="text-muted">SecureCommand Terminal</p>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Objective:</strong> Demonstrate crypto-agility and hybrid security model in a clear, visual way.</p>
+                        
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> Standard Ed25519 vs. Post-Quantum hybrid crypto</li>
+                            <li><i class="fas fa-check"></i> Real-time cryptographic protocol selection</li>
+                            <li><i class="fas fa-check"></i> Visual verification status indicators</li>
+                            <li><i class="fas fa-check"></i> Future-proof quantum-resistant signatures</li>
+                        </ul>
+                        
+                        <div class="mt-4">
+                            <strong>The "Aha!" Moment:</strong>
+                            <p class="small text-muted">Seeing two green checkmarks for PQC commands makes "hybrid signature" and "layered security" immediately obvious, showing the architecture is future-proof.</p>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="government-secure-command.html" class="demo-btn">
+                            <i class="fas fa-play"></i> Launch Government Demo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Section -->
+        <div class="comparison-section">
+            <div class="container">
+                <div class="text-center mb-5">
+                    <h2>WebAuthn/Passkeys vs. Proof-Messenger</h2>
+                    <p class="lead">Understanding the difference between Layer 1 and Layer 2 authorization</p>
+                </div>
+                
+                <div class="comparison-table">
+                    <table class="table table-borderless mb-0">
+                        <thead>
+                            <tr>
+                                <th>Capability</th>
+                                <th>WebAuthn/Passkeys</th>
+                                <th>Proof-Messenger</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Primary Use Case</strong></td>
+                                <td>User authentication ("Who are you?")</td>
+                                <td>Context authorization ("Can you do this specific thing?")</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Context Awareness</strong></td>
+                                <td><i class="fas fa-times x-icon"></i> Generic login only</td>
+                                <td><i class="fas fa-check check-icon"></i> Rich, structured context data</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Multi-Party Workflows</strong></td>
+                                <td><i class="fas fa-times x-icon"></i> Single user authentication</td>
+                                <td><i class="fas fa-check check-icon"></i> Sequential multi-party authorization</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Audit Trail</strong></td>
+                                <td><i class="fas fa-times x-icon"></i> Basic "user logged in" logs</td>
+                                <td><i class="fas fa-check check-icon"></i> Detailed context + proof bundles</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Programmable Logic</strong></td>
+                                <td><i class="fas fa-times x-icon"></i> Fixed authentication flow</td>
+                                <td><i class="fas fa-check check-icon"></i> Custom authorization workflows</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Compliance Ready</strong></td>
+                                <td><i class="fas fa-times x-icon"></i> Requires additional systems</td>
+                                <td><i class="fas fa-check check-icon"></i> Built-in compliance logging</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Post-Quantum Ready</strong></td>
+                                <td><i class="fas fa-times x-icon"></i> Limited to current standards</td>
+                                <td><i class="fas fa-check check-icon"></i> Crypto-agile, hybrid algorithms</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <span class="stat-number">4</span>
+                            <span class="stat-label">Industry Demos</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <span class="stat-number">100%</span>
+                            <span class="stat-label">Interactive</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <span class="stat-number">∞</span>
+                            <span class="stat-label">Scalable Workflows</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-item">
+                            <span class="stat-number">🔮</span>
+                            <span class="stat-label">Future-Proof</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="text-center mb-5">
+            <h2>Ready to Experience Layer 2 Authorization?</h2>
+            <p class="lead mb-4">Choose any demo above to see how Proof-Messenger transforms traditional workflows into secure, auditable, and programmable authorization systems.</p>
+            <div class="row g-3 justify-content-center">
+                <div class="col-auto">
+                    <a href="fintech-wire-transfer.html" class="btn btn-primary btn-lg">
+                        <i class="fas fa-university"></i> Start with FinTech
+                    </a>
+                </div>
+                <div class="col-auto">
+                    <a href="healthcare-record-access.html" class="btn btn-success btn-lg">
+                        <i class="fas fa-hospital"></i> Try Healthcare
+                    </a>
+                </div>
+                <div class="col-auto">
+                    <a href="legal-document-signing.html" class="btn btn-warning btn-lg">
+                        <i class="fas fa-gavel"></i> Explore Legal
+                    </a>
+                </div>
+                <div class="col-auto">
+                    <a href="government-secure-command.html" class="btn btn-dark btn-lg">
+                        <i class="fas fa-shield-alt"></i> See Government
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

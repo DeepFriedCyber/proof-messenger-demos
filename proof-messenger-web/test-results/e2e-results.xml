@@ -1,0 +1,492 @@
+<testsuites id="" name="" tests="115" failures="0" skipped="115" errors="0" time="0.20370799999999986">
+<testsuite name="messaging.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="chromium" tests="11" failures="0" skipped="11" time="0" errors="0">
+<testcase name="Proof Messenger E2E Journey › complete user journey: generate key, sign message, and verify end-to-end" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › error handling: invalid message rejection by relay server" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › cross-browser compatibility: key generation and signing" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › performance: key generation and signing speed" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › ui state management: reset functionality" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › security validation: private key never exposed" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › relay server integration: multiple message verification" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Scenarios and Edge Cases › malformed requests to relay server" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Scenarios and Edge Cases › wasm loading failure simulation" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility and Usability › keyboard navigation and accessibility" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility and Usability › responsive design on mobile viewport" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="performance.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="chromium" tests="8" failures="0" skipped="8" time="0" errors="0">
+<testcase name="Performance Testing › key generation performance benchmarks" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › message signing performance with various message sizes" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › concurrent operations stress test" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › memory usage during extended operations" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › relay server load test with multiple messages" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › browser resource utilization under load" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › error recovery under load conditions" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scalability Testing › multiple browser instances simulation" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="react-integration.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="chromium" tests="4" failures="0" skipped="4" time="0" errors="0">
+<testcase name="React Component Integration › zustand store integration with react components" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="React Component Integration › react component state isolation" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="React Component Integration › component re-rendering with secure state" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Handling in React Components › react error boundaries for crypto operations" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="messaging.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="firefox" tests="11" failures="0" skipped="11" time="0" errors="0">
+<testcase name="Proof Messenger E2E Journey › complete user journey: generate key, sign message, and verify end-to-end" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › error handling: invalid message rejection by relay server" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › cross-browser compatibility: key generation and signing" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › performance: key generation and signing speed" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › ui state management: reset functionality" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › security validation: private key never exposed" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › relay server integration: multiple message verification" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Scenarios and Edge Cases › malformed requests to relay server" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Scenarios and Edge Cases › wasm loading failure simulation" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility and Usability › keyboard navigation and accessibility" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility and Usability › responsive design on mobile viewport" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="performance.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="firefox" tests="8" failures="0" skipped="8" time="0" errors="0">
+<testcase name="Performance Testing › key generation performance benchmarks" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › message signing performance with various message sizes" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › concurrent operations stress test" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › memory usage during extended operations" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › relay server load test with multiple messages" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › browser resource utilization under load" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › error recovery under load conditions" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scalability Testing › multiple browser instances simulation" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="react-integration.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="firefox" tests="4" failures="0" skipped="4" time="0" errors="0">
+<testcase name="React Component Integration › zustand store integration with react components" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="React Component Integration › react component state isolation" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="React Component Integration › component re-rendering with secure state" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Handling in React Components › react error boundaries for crypto operations" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="messaging.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="webkit" tests="11" failures="0" skipped="11" time="0" errors="0">
+<testcase name="Proof Messenger E2E Journey › complete user journey: generate key, sign message, and verify end-to-end" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › error handling: invalid message rejection by relay server" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › cross-browser compatibility: key generation and signing" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › performance: key generation and signing speed" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › ui state management: reset functionality" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › security validation: private key never exposed" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › relay server integration: multiple message verification" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Scenarios and Edge Cases › malformed requests to relay server" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Scenarios and Edge Cases › wasm loading failure simulation" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility and Usability › keyboard navigation and accessibility" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility and Usability › responsive design on mobile viewport" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="performance.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="webkit" tests="8" failures="0" skipped="8" time="0" errors="0">
+<testcase name="Performance Testing › key generation performance benchmarks" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › message signing performance with various message sizes" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › concurrent operations stress test" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › memory usage during extended operations" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › relay server load test with multiple messages" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › browser resource utilization under load" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › error recovery under load conditions" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scalability Testing › multiple browser instances simulation" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="react-integration.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="webkit" tests="4" failures="0" skipped="4" time="0" errors="0">
+<testcase name="React Component Integration › zustand store integration with react components" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="React Component Integration › react component state isolation" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="React Component Integration › component re-rendering with secure state" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Handling in React Components › react error boundaries for crypto operations" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="messaging.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="Mobile Chrome" tests="11" failures="0" skipped="11" time="0" errors="0">
+<testcase name="Proof Messenger E2E Journey › complete user journey: generate key, sign message, and verify end-to-end" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › error handling: invalid message rejection by relay server" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › cross-browser compatibility: key generation and signing" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › performance: key generation and signing speed" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › ui state management: reset functionality" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › security validation: private key never exposed" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › relay server integration: multiple message verification" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Scenarios and Edge Cases › malformed requests to relay server" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Scenarios and Edge Cases › wasm loading failure simulation" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility and Usability › keyboard navigation and accessibility" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility and Usability › responsive design on mobile viewport" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="performance.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="Mobile Chrome" tests="8" failures="0" skipped="8" time="0" errors="0">
+<testcase name="Performance Testing › key generation performance benchmarks" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › message signing performance with various message sizes" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › concurrent operations stress test" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › memory usage during extended operations" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › relay server load test with multiple messages" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › browser resource utilization under load" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › error recovery under load conditions" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scalability Testing › multiple browser instances simulation" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="react-integration.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="Mobile Chrome" tests="4" failures="0" skipped="4" time="0" errors="0">
+<testcase name="React Component Integration › zustand store integration with react components" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="React Component Integration › react component state isolation" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="React Component Integration › component re-rendering with secure state" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Handling in React Components › react error boundaries for crypto operations" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="messaging.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="Mobile Safari" tests="11" failures="0" skipped="11" time="0" errors="0">
+<testcase name="Proof Messenger E2E Journey › complete user journey: generate key, sign message, and verify end-to-end" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › error handling: invalid message rejection by relay server" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › cross-browser compatibility: key generation and signing" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › performance: key generation and signing speed" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › ui state management: reset functionality" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › security validation: private key never exposed" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Proof Messenger E2E Journey › relay server integration: multiple message verification" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Scenarios and Edge Cases › malformed requests to relay server" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Scenarios and Edge Cases › wasm loading failure simulation" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility and Usability › keyboard navigation and accessibility" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Accessibility and Usability › responsive design on mobile viewport" classname="messaging.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="performance.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="Mobile Safari" tests="8" failures="0" skipped="8" time="0" errors="0">
+<testcase name="Performance Testing › key generation performance benchmarks" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › message signing performance with various message sizes" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › concurrent operations stress test" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Performance Testing › memory usage during extended operations" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › relay server load test with multiple messages" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › browser resource utilization under load" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Load Testing › error recovery under load conditions" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Scalability Testing › multiple browser instances simulation" classname="performance.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+<testsuite name="react-integration.spec.js" timestamp="2025-07-11T08:56:15.221Z" hostname="Mobile Safari" tests="4" failures="0" skipped="4" time="0" errors="0">
+<testcase name="React Component Integration › zustand store integration with react components" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="React Component Integration › react component state isolation" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="React Component Integration › component re-rendering with secure state" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="Error Handling in React Components › react error boundaries for crypto operations" classname="react-integration.spec.js" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>
