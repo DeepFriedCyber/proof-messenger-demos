@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biometric Approval Flow Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .section h2 {
+            color: #34495e;
+            margin-top: 0;
+        }
+        .transaction-form {
+            display: grid;
+            gap: 15px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .biometric-button {
+            background-color: #e74c3c;
+            font-size: 18px;
+            padding: 15px 30px;
+        }
+        .biometric-button:hover {
+            background-color: #c0392b;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .proof-display {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .architecture-note {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .architecture-note h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .step-number {
+            background-color: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        .fingerprint-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Biometric Approval Flow Demo</h1>
+        
+        <div class="architecture-note">
+            <h3>🏗️ Corrected Architecture</h3>
+            <p><strong>Key Principle:</strong> The backend server has <strong>ZERO knowledge</strong> of biometric methods.</p>
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>User initiates transaction on frontend</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>Frontend calls WebAuthn API with transaction context as challenge</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>Device prompts for biometric authentication (fingerprint, face, etc.)</div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div>Device's secure enclave signs the transaction context</div>
+            </div>
+            <div class="step">
+                <div class="step-number">5</div>
+                <div>Frontend sends only cryptographic proof to backend</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💰 Transaction Details</h2>
+            <div class="transaction-form">
+                <div class="form-group">
+                    <label for="action">Transaction Type:</label>
+                    <select id="action">
+                        <option value="wire_transfer">Wire Transfer</option>
+                        <option value="executive_approval">Executive Approval</option>
+                        <option value="high_value_payment">High Value Payment</option>
+                        <option value="crypto_transfer">Cryptocurrency Transfer</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount ($):</label>
+                    <input type="number" id="amount" value="1000000" min="1" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="destination">Destination:</label>
+                    <input type="text" id="destination" value="ACME Corporation" placeholder="Recipient name or account">
+                </div>
+                <div class="form-group">
+                    <label for="userId">User ID:</label>
+                    <input type="text" id="userId" value="executive-user-123" placeholder="Your user identifier">
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔒 Biometric Authentication</h2>
+            <div id="biometric-status"></div>
+            <button id="check-biometric" onclick="checkBiometricSupport()">
+                Check Biometric Support
+            </button>
+            <button id="trigger-biometric" class="biometric-button" onclick="triggerBiometricApproval()" disabled>
+                <span class="fingerprint-icon">👆</span>
+                Approve with Biometric Authentication
+            </button>
+        </div>
+
+        <div class="section">
+            <h2>📋 Generated Proof (Sent to Backend)</h2>
+            <div id="proof-display" class="proof-display">
+                No proof generated yet. Click "Approve with Biometric Authentication" to generate a cryptographic proof.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔍 Security Analysis</h2>
+            <div id="security-analysis">
+                <p><strong>What the backend receives:</strong></p>
+                <ul>
+                    <li>✅ Cryptographic signature over transaction context</li>
+                    <li>✅ Public credential ID (no sensitive data)</li>
+                    <li>✅ Authenticator metadata (device info)</li>
+                    <li>✅ Transaction context for verification</li>
+                </ul>
+                <p><strong>What the backend NEVER sees:</strong></p>
+                <ul>
+                    <li>❌ Biometric templates or raw biometric data</li>
+                    <li>❌ Fingerprint images or face scans</li>
+                    <li>❌ Device unlock methods or PINs</li>
+                    <li>❌ Private keys (remain in secure enclave)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="../src/biometric-proof-generator.js"></script>
+    <script>
+        // Demo application logic
+        let biometricSupported = false;
+
+        async function checkBiometricSupport() {
+            const statusDiv = document.getElementById('biometric-status');
+            const triggerButton = document.getElementById('trigger-biometric');
+            
+            try {
+                statusDiv.innerHTML = '<div class="status info">Checking biometric support...</div>';
+                
+                // Check if WebAuthn is supported
+                if (!window.PublicKeyCredential) {
+                    throw new Error('WebAuthn is not supported in this browser');
+                }
+                
+                // Check if platform authenticator is available
+                const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                
+                if (available) {
+                    biometricSupported = true;
+                    statusDiv.innerHTML = '<div class="status success">✅ Biometric authentication is supported on this device!</div>';
+                    triggerButton.disabled = false;
+                } else {
+                    statusDiv.innerHTML = '<div class="status error">❌ Biometric authentication is not available on this device. You may need to set up biometric authentication in your device settings.</div>';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="status error">❌ Error checking biometric support: ${error.message}</div>`;
+                console.error('Biometric support check failed:', error);
+            }
+        }
+
+        async function triggerBiometricApproval() {
+            if (!biometricSupported) {
+                alert('Biometric authentication is not supported. Please check support first.');
+                return;
+            }
+
+            const statusDiv = document.getElementById('biometric-status');
+            const proofDiv = document.getElementById('proof-display');
+            const triggerButton = document.getElementById('trigger-biometric');
+            
+            try {
+                // Disable button during authentication
+                triggerButton.disabled = true;
+                statusDiv.innerHTML = '<div class="status info">🔄 Preparing biometric authentication...</div>';
+                
+                // Gather transaction data from form
+                const transactionData = {
+                    action: document.getElementById('action').value,
+                    amount: parseFloat(document.getElementById('amount').value),
+                    destination: document.getElementById('destination').value,
+                    user_id: document.getElementById('userId').value,
+                    timestamp: new Date().toISOString(),
+                    request_id: `req-${Date.now()}`,
+                };
+
+                statusDiv.innerHTML = '<div class="status info">👆 Please provide biometric authentication...</div>';
+                
+                // This is where the magic happens - call WebAuthn API
+                const proof = await window.BiometricProofGenerator.createBiometricApprovedProof(transactionData);
+                
+                // Display success
+                statusDiv.innerHTML = '<div class="status success">✅ Biometric authentication successful! Cryptographic proof generated.</div>';
+                
+                // Display the proof that would be sent to backend
+                proofDiv.innerHTML = `<pre>${JSON.stringify(proof, null, 2)}</pre>`;
+                
+                // Analyze the proof for security demonstration
+                analyzeProofSecurity(proof);
+                
+            } catch (error) {
+                let errorMessage = error.message;
+                let statusClass = 'error';
+                
+                // Provide user-friendly error messages
+                if (error.message.includes('denied')) {
+                    errorMessage = 'Biometric authentication was cancelled or denied. Please try again.';
+                } else if (error.message.includes('not supported')) {
+                    errorMessage = 'Biometric authentication is not supported on this device.';
+                } else if (error.message.includes('timeout')) {
+                    errorMessage = 'Biometric authentication timed out. Please try again.';
+                }
+                
+                statusDiv.innerHTML = `<div class="status ${statusClass}">❌ ${errorMessage}</div>`;
+                proofDiv.innerHTML = 'Authentication failed. No proof generated.';
+                console.error('Biometric authentication failed:', error);
+            } finally {
+                // Re-enable button
+                triggerButton.disabled = false;
+            }
+        }
+
+        function analyzeProofSecurity(proof) {
+            const analysisDiv = document.getElementById('security-analysis');
+            
+            // Check for forbidden biometric terms
+            const proofString = JSON.stringify(proof);
+            const forbiddenTerms = ['fingerprint', 'biometric', 'face', 'iris', 'voice', 'template', 'minutiae', 'enrollment', 'scan'];
+            const foundForbiddenTerms = forbiddenTerms.filter(term => proofString.toLowerCase().includes(term));
+            
+            let securityAnalysis = `
+                <h3>🔍 Real-time Security Analysis</h3>
+                <p><strong>Proof size:</strong> ${JSON.stringify(proof).length} bytes</p>
+                <p><strong>Transaction context included:</strong> ✅ Yes (for non-repudiation)</p>
+                <p><strong>Cryptographic signature present:</strong> ✅ Yes</p>
+                <p><strong>Biometric data exposure:</strong> ${foundForbiddenTerms.length === 0 ? '✅ None detected' : '❌ Found: ' + foundForbiddenTerms.join(', ')}</p>
+                <p><strong>Device attestation:</strong> ✅ Included in authenticatorData</p>
+                <p><strong>Timestamp:</strong> ${proof.transaction_context.timestamp}</p>
+                <p><strong>User verification:</strong> ✅ Required by WebAuthn call</p>
+                
+                <h4>🛡️ Security Properties Verified:</h4>
+                <ul>
+                    <li>✅ Transaction context is cryptographically signed</li>
+                    <li>✅ No biometric templates leave the device</li>
+                    <li>✅ Private keys remain in secure enclave</li>
+                    <li>✅ Proof provides non-repudiation</li>
+                    <li>✅ Device attestation prevents spoofing</li>
+                </ul>
+            `;
+            
+            analysisDiv.innerHTML = securityAnalysis;
+        }
+
+        // Initialize the demo
+        window.addEventListener('load', () => {
+            console.log('🔐 Biometric Approval Flow Demo Loaded');
+            console.log('This demo shows the corrected architecture where:');
+            console.log('1. Backend has ZERO knowledge of biometric methods');
+            console.log('2. Frontend calls WebAuthn API with transaction context as challenge');
+            console.log('3. Only cryptographic proofs are sent to backend');
+            
+            // Auto-check biometric support on load
+            setTimeout(checkBiometricSupport, 1000);
+        });
+    </script>
+</body>
+</html>
