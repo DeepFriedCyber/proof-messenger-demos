@@ -1,6 +1,7 @@
 use proof_messenger_relay::{
     database::Database,
     jwt_validator::JwtValidator,
+    secure_logger::SecureLogger,
     create_app_with_oauth,
 };
 use std::sync::Arc;
@@ -35,9 +36,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ));
     println!("✅ JWT validator configured for Identity Provider");
 
-    // 3. Create the OAuth2.0-protected application
-    let app = create_app_with_oauth(db, jwt_validator);
-    println!("✅ OAuth2.0 Resource Server configured");
+    // 3. Set up secure logging with encryption
+    let secure_key = SecureLogger::generate_key();
+    let secure_logger = Arc::new(SecureLogger::new(&secure_key));
+    println!("✅ Secure logger configured with AES-GCM encryption");
+
+    // 4. Create the OAuth2.0-protected application with secure logging
+    let app = create_app_with_oauth(db, jwt_validator, secure_logger);
+    println!("✅ OAuth2.0 Resource Server with Secure Logging configured");
 
     println!("\n🚀 Server Configuration:");
     println!("   • Protected endpoints require valid JWT tokens");
@@ -46,6 +52,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   • Required scopes:");
     println!("     - proof:create (for /relay endpoint)");
     println!("     - message:read (for /messages/* endpoints)");
+    println!("   • All security events encrypted with AES-GCM");
+    println!("   • Audit logs include authentication, authorization, and access events");
 
     println!("\n📋 API Endpoints:");
     println!("   🔒 POST /relay - Create and verify proofs (requires proof:create scope)");
@@ -109,7 +117,10 @@ mod tests {
             Some("proof-messenger-api".to_string()),
         ));
 
-        let app = create_app_with_oauth(db, jwt_validator);
+        let secure_key = SecureLogger::generate_key();
+        let secure_logger = Arc::new(SecureLogger::new(&secure_key));
+
+        let app = create_app_with_oauth(db, jwt_validator, secure_logger);
 
         // Create a valid JWT with required scope
         let claims = Claims {
@@ -150,7 +161,10 @@ mod tests {
             Some("proof-messenger-api".to_string()),
         ));
 
-        let app = create_app_with_oauth(db, jwt_validator);
+        let secure_key = SecureLogger::generate_key();
+        let secure_logger = Arc::new(SecureLogger::new(&secure_key));
+
+        let app = create_app_with_oauth(db, jwt_validator, secure_logger);
 
         // ACT: Make request to protected endpoint without token
         let request = Request::builder()
@@ -177,7 +191,10 @@ mod tests {
             Some("proof-messenger-api".to_string()),
         ));
 
-        let app = create_app_with_oauth(db, jwt_validator);
+        let secure_key = SecureLogger::generate_key();
+        let secure_logger = Arc::new(SecureLogger::new(&secure_key));
+
+        let app = create_app_with_oauth(db, jwt_validator, secure_logger);
 
         // ACT: Make request to public endpoint without token
         let request = Request::builder()
@@ -204,7 +221,10 @@ mod tests {
             Some("proof-messenger-api".to_string()),
         ));
 
-        let app = create_app_with_oauth(db, jwt_validator);
+        let secure_key = SecureLogger::generate_key();
+        let secure_logger = Arc::new(SecureLogger::new(&secure_key));
+
+        let app = create_app_with_oauth(db, jwt_validator, secure_logger);
 
         // Create a valid JWT but without required scope
         let claims = Claims {

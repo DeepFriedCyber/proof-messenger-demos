@@ -26,6 +26,10 @@ jsonwebtoken = "9.2"
 base64 = "0.22"
 async-trait = "0.1"
 
+# Secure logging dependencies
+aes-gcm = "0.10"
+rand = "0.8"
+
 [dev-dependencies]
 hyper = "1.0"
 proptest = "1.4"

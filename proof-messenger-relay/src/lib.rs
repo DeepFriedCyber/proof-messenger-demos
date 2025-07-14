@@ -6,6 +6,7 @@
 pub mod database;
 pub mod jwt_validator;
 pub mod auth_middleware;
+pub mod secure_logger;
 
 use axum::{
     extract::{Json, Path, Query, State},
@@ -26,6 +27,7 @@ use hex;
 use database::{Database, DatabaseError, StoredMessage};
 use auth_middleware::{AuthContext, auth_middleware, require_scope};
 use jwt_validator::JwtValidator;
+use secure_logger::{SecureLogger, LogLevel};
 
 /// Query parameters for message retrieval
 #[derive(Deserialize)]
@@ -227,9 +229,13 @@ pub fn create_app_with_rate_limiting(db: Arc<Database>) -> Router {
         .layer(CorsLayer::permissive()) // Note: Configure restrictively in production
 }
 
-/// Create the application router with OAuth2.0 JWT authentication
+/// Create the application router with OAuth2.0 JWT authentication and secure logging
 /// This version implements proper Resource Server behavior for OAuth2.0 flows
-pub fn create_app_with_oauth(db: Arc<Database>, jwt_validator: Arc<JwtValidator>) -> Router {
+pub fn create_app_with_oauth(
+    db: Arc<Database>, 
+    jwt_validator: Arc<JwtValidator>,
+    secure_logger: Arc<SecureLogger>,
+) -> Router {
     use tower_http::trace::TraceLayer;
     use tower_http::cors::CorsLayer;
     use tower_http::set_header::SetResponseHeaderLayer;
@@ -241,7 +247,7 @@ pub fn create_app_with_oauth(db: Arc<Database>, jwt_validator: Arc<JwtValidator>
         .route("/messages/:group_id", get(authenticated_get_messages_handler))
         .route("/message/:message_id", get(authenticated_get_message_by_id_handler))
         .layer(middleware::from_fn_with_state(jwt_validator.clone(), auth_middleware))
-        .with_state((db.clone(), jwt_validator.clone()));
+        .with_state((db.clone(), jwt_validator.clone(), secure_logger.clone()));
 
     // Create public routes (health checks don't need authentication)
     let public_routes = Router::new()
@@ -384,23 +390,80 @@ async fn ready_handler(State(db): State<Arc<Database>>) -> impl IntoResponse {
 /// OAuth2.0-protected relay handler that requires authentication and proper scopes
 #[instrument(skip_all)]
 async fn authenticated_relay_handler(
-    State((db, _validator)): State<(Arc<Database>, Arc<JwtValidator>)>,
+    State((db, _validator, secure_logger)): State<(Arc<Database>, Arc<JwtValidator>, Arc<SecureLogger>)>,
     auth: AuthContext,
     Json(payload): Json<Message>,
 ) -> Result<impl IntoResponse, AppError> {
     info!("Received authenticated message for relay from user: {}", auth.user_id);
     
+    // Log the authentication event securely
+    let mut metadata = std::collections::HashMap::new();
+    metadata.insert("endpoint".to_string(), "/relay".to_string());
+    metadata.insert("method".to_string(), "POST".to_string());
+    metadata.insert("scopes".to_string(), format!("{:?}", auth.scopes));
+    
+    if let Err(e) = secure_logger.audit_log(
+        "User authenticated for proof creation".to_string(),
+        auth.user_id.clone(),
+        None, // Could extract request ID from headers
+        metadata.clone(),
+    ) {
+        warn!("Failed to log authentication event: {}", e);
+    }
+    
     // Check if user has required scope for creating proofs
-    require_scope(&auth, "proof:create")
-        .map_err(|_| AppError::ProcessingError("Insufficient permissions to create proofs".to_string()))?;
+    match require_scope(&auth, "proof:create") {
+        Ok(_) => {
+            // Log successful authorization
+            metadata.insert("authorization_result".to_string(), "granted".to_string());
+            if let Err(e) = secure_logger.log_security_event(
+                LogLevel::Audit,
+                "Proof creation authorization granted".to_string(),
+                Some(auth.user_id.clone()),
+                None,
+                metadata.clone(),
+            ) {
+                warn!("Failed to log authorization event: {}", e);
+            }
+        }
+        Err(_) => {
+            // Log authorization failure
+            metadata.insert("authorization_result".to_string(), "denied".to_string());
+            metadata.insert("required_scope".to_string(), "proof:create".to_string());
+            if let Err(e) = secure_logger.critical_security_event(
+                "Proof creation authorization denied - insufficient scope".to_string(),
+                Some(auth.user_id.clone()),
+                None,
+                metadata,
+            ) {
+                warn!("Failed to log authorization failure: {}", e);
+            }
+            return Err(AppError::ProcessingError("Insufficient permissions to create proofs".to_string()));
+        }
+    }
     
     // Delegate to the unit-tested function
     process_and_verify_message(&payload)?;
     
     // Store the verified message in the database with user context
-    let stored_message = StoredMessage::from(payload);
-    // You could add user_id to the stored message for audit trails
+    let stored_message = StoredMessage::from(payload.clone());
     let message_id = db.store_message(stored_message).await?;
+    
+    // Log successful proof creation
+    let mut success_metadata = std::collections::HashMap::new();
+    success_metadata.insert("message_id".to_string(), message_id.clone());
+    success_metadata.insert("sender".to_string(), payload.sender.clone());
+    success_metadata.insert("context".to_string(), payload.context.clone());
+    success_metadata.insert("proof_verified".to_string(), "true".to_string());
+    
+    if let Err(e) = secure_logger.audit_log(
+        "Proof creation and verification completed successfully".to_string(),
+        auth.user_id.clone(),
+        None,
+        success_metadata,
+    ) {
+        warn!("Failed to log proof creation success: {}", e);
+    }
     
     let success_response = Json(serde_json::json!({
         "status": "success",
@@ -415,7 +478,7 @@ async fn authenticated_relay_handler(
 /// OAuth2.0-protected handler to retrieve messages for a specific group
 #[instrument(skip_all)]
 async fn authenticated_get_messages_handler(
-    State((db, _validator)): State<(Arc<Database>, Arc<JwtValidator>)>,
+    State((db, _validator, secure_logger)): State<(Arc<Database>, Arc<JwtValidator>, Arc<SecureLogger>)>,
     auth: AuthContext,
     Path(group_id): Path<String>,
     Query(params): Query<MessageQuery>,
@@ -424,9 +487,41 @@ async fn authenticated_get_messages_handler(
     
     // Check if user has required scope for reading messages
     require_scope(&auth, "message:read")
-        .map_err(|_| AppError::ProcessingError("Insufficient permissions to read messages".to_string()))?;
+        .map_err(|_| {
+            // Log authorization failure
+            let mut metadata = std::collections::HashMap::new();
+            metadata.insert("endpoint".to_string(), "/messages".to_string());
+            metadata.insert("group_id".to_string(), group_id.clone());
+            metadata.insert("required_scope".to_string(), "message:read".to_string());
+            
+            if let Err(e) = secure_logger.critical_security_event(
+                "Message read authorization denied - insufficient scope".to_string(),
+                Some(auth.user_id.clone()),
+                None,
+                metadata,
+            ) {
+                warn!("Failed to log authorization failure: {}", e);
+            }
+            
+            AppError::ProcessingError("Insufficient permissions to read messages".to_string())
+        })?;
     
     let messages = db.get_messages_by_group(&group_id, params.limit).await?;
+    
+    // Log successful message retrieval
+    let mut metadata = std::collections::HashMap::new();
+    metadata.insert("group_id".to_string(), group_id.clone());
+    metadata.insert("message_count".to_string(), messages.len().to_string());
+    metadata.insert("limit".to_string(), params.limit.unwrap_or(100).to_string());
+    
+    if let Err(e) = secure_logger.audit_log(
+        "Messages retrieved successfully".to_string(),
+        auth.user_id.clone(),
+        None,
+        metadata,
+    ) {
+        warn!("Failed to log message retrieval: {}", e);
+    }
     
     let response = Json(serde_json::json!({
         "status": "success",
@@ -442,7 +537,7 @@ async fn authenticated_get_messages_handler(
 /// OAuth2.0-protected handler to retrieve a specific message by ID
 #[instrument(skip_all)]
 async fn authenticated_get_message_by_id_handler(
-    State((db, _validator)): State<(Arc<Database>, Arc<JwtValidator>)>,
+    State((db, _validator, secure_logger)): State<(Arc<Database>, Arc<JwtValidator>, Arc<SecureLogger>)>,
     auth: AuthContext,
     Path(message_id): Path<String>,
 ) -> Result<impl IntoResponse, AppError> {
@@ -453,6 +548,20 @@ async fn authenticated_get_message_by_id_handler(
         .map_err(|_| AppError::ProcessingError("Insufficient permissions to read messages".to_string()))?;
     
     let message = db.get_message_by_id(&message_id).await?;
+    
+    // Log successful message retrieval
+    let mut metadata = std::collections::HashMap::new();
+    metadata.insert("message_id".to_string(), message_id.clone());
+    metadata.insert("endpoint".to_string(), "/message".to_string());
+    
+    if let Err(e) = secure_logger.audit_log(
+        "Individual message retrieved successfully".to_string(),
+        auth.user_id.clone(),
+        None,
+        metadata,
+    ) {
+        warn!("Failed to log message retrieval: {}", e);
+    }
     
     let response = Json(serde_json::json!({
         "status": "success",
