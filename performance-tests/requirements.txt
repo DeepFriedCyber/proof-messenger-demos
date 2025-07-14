@@ -1,0 +1,41 @@
+# Performance Testing Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core load testing framework
+locust==2.17.0
+
+# Mock server dependencies
+flask==2.3.3
+werkzeug==2.3.7
+
+# Data analysis and reporting
+pandas==2.1.1
+matplotlib==3.7.2
+seaborn==0.12.2
+numpy==1.24.3
+
+# HTTP client for health checks and API calls
+requests==2.31.0
+
+# Configuration and environment management
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# Performance monitoring and metrics
+psutil==5.9.5
+prometheus-client==0.17.1
+
+# Reporting and notifications
+jinja2==3.1.2
+markdown==3.4.4
+
+# Development and testing utilities
+pytest==7.4.2
+pytest-cov==4.1.0
+black==23.7.0
+flake8==6.0.0
+
+# Optional: Advanced monitoring (uncomment if needed)
+# influxdb-client==1.37.0
+# grafana-api==1.0.3
+# slack-sdk==3.22.0
