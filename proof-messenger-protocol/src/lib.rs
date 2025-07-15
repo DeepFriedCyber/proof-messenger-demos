@@ -53,6 +53,7 @@
 pub mod key;
 pub mod proof;
 pub mod errors;
+pub mod compliance;
 
 // Property-based tests for proof error handling
 #[cfg(test)]

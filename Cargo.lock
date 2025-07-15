@@ -1769,9 +1769,13 @@ dependencies = [
 name = "proof-messenger-protocol"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "ed25519-dalek",
  "proptest",
  "rand 0.7.3",
+ "regex",
+ "serde",
+ "serde_json",
  "thiserror 1.0.69",
  "wasm-bindgen",
  "zeroize",
