@@ -3,6 +3,22 @@
 //! These tests verify that the complete system works end-to-end,
 //! including message verification, storage, and retrieval.
 
+// Import test modules
+mod integration {
+    // Database configuration tests
+    pub mod database_config_tests;
+    
+    // Health check tests
+    pub mod health_check_tests;
+    
+    // Docker integration tests (conditionally compiled)
+    #[cfg(feature = "docker-tests")]
+    pub mod docker_integration_tests;
+}
+
+// Re-export the DatabaseTestHelper for use in other tests
+pub use integration::database_config_tests::DatabaseTestHelper;
+
 use axum::{
     body::{Body, to_bytes},
     http::{Request, StatusCode},
@@ -35,7 +51,7 @@ async fn create_test_app() -> Router {
         Json(payload): Json<Message>,
     ) -> Result<impl IntoResponse, AppError> {
         // Verify the message
-        process_and_verify_message(&payload)?;
+        process_and_verify_message(&payload, Some(&db)).await?;
         
         // Store the verified message
         let stored_message = StoredMessage::from(payload);

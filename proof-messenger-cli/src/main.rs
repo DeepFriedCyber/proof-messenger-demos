@@ -1,3 +1,5 @@
+// src/main.rs
+
 use clap::{Parser, Subcommand, ValueEnum};
 use proof_messenger_protocol::key::{generate_keypair, generate_keypair_with_seed};
 use proof_messenger_protocol::proof::{make_proof, Invite};

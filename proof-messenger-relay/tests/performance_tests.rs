@@ -8,6 +8,7 @@ use axum::{
 };
 use proof_messenger_relay::{Message, database::Database};
 use serde_json::json;
+use ed25519_dalek::Signer;
 use std::{sync::Arc, time::Instant};
 use tower::ServiceExt;
 use proof_messenger_protocol::key::generate_keypair_with_seed;

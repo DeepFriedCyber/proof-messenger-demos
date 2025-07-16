@@ -90,7 +90,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 ENV RUST_LOG=debug
 ENV RUST_BACKTRACE=1
 ENV BIND_ADDRESS=0.0.0.0:8080
-ENV DATABASE_URL=sqlite:/app/db/messages.db
+ENV DATABASE_URL=sqlite:///app/db/messages.db
 
 # Fix permissions for /app directory
 USER root

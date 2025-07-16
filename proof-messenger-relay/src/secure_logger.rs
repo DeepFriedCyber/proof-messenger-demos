@@ -1,5 +1,5 @@
 use aes_gcm::{Aes256Gcm, Key, Nonce, KeyInit};
-use aes_gcm::aead::{Aead, OsRng, generic_array::GenericArray};
+use aes_gcm::aead::{Aead, OsRng};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -62,7 +62,6 @@ pub struct EncryptedLogEntry {
 /// Secure logger that encrypts sensitive log data using AES-GCM
 pub struct SecureLogger {
     cipher: Aes256Gcm,
-    key: [u8; 32],
 }
 
 impl SecureLogger {
@@ -73,7 +72,6 @@ impl SecureLogger {
         
         Self {
             cipher,
-            key: *key,
         }
     }
 

@@ -30,7 +30,10 @@ async fn main() {
     }
     
     // Try to create the database file explicitly if it doesn't exist
-    let db_path = database_url.strip_prefix("sqlite://").unwrap_or(&database_url);
+    let db_path = database_url
+        .strip_prefix("sqlite://")
+        .or_else(|| database_url.strip_prefix("sqlite:"))
+        .unwrap_or(&database_url);
     info!("Database path: {}", db_path);
     
     // Ensure the directory exists

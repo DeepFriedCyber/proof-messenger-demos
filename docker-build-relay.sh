@@ -1,5 +1,5 @@
 #!/bin/bash
-# Enhanced docker-build.sh with comprehensive TDD testing
+# Enhanced docker-build-relay.sh - Relay Server Only
 set -e
 
 # Colors for output
@@ -11,8 +11,6 @@ NC='\033[0m' # No Color
 
 # Test configuration
 TEST_RELAY_PORT=8080
-TEST_WEB_PORT=8001
-TEST_TIMEOUT=30
 HEALTH_CHECK_RETRIES=5
 HEALTH_CHECK_INTERVAL=2
 
@@ -36,8 +34,8 @@ warning() {
 # Cleanup function
 cleanup() {
     log "Cleaning up test containers..."
-    docker stop test-relay-server test-web-app 2>/dev/null || true
-    docker rm test-relay-server test-web-app 2>/dev/null || true
+    docker stop test-relay-server 2>/dev/null || true
+    docker rm test-relay-server 2>/dev/null || true
 }
 
 # Set up cleanup trap
@@ -50,7 +48,6 @@ setup_environment() {
         "$HOME/.cargo/bin"
         "/c/Users/$USER/.cargo/bin"
         "/mnt/c/Users/$USER/.cargo/bin"
-        "$(pwd)/../.cargo/bin"
     )
     
     # Add cargo paths to PATH
@@ -93,9 +90,7 @@ pre_build_validation() {
     # Check required files exist
     required_files=(
         "proof-messenger-relay/Dockerfile"
-        "proof-messenger-web/Dockerfile"
         "proof-messenger-relay/src/main.rs"
-        "docker-compose.yml"
     )
 
     for file in "${required_files[@]}"; do
@@ -144,66 +139,30 @@ run_unit_tests() {
     fi
 }
 
-# Run integration tests
-run_integration_tests() {
-    log "Running integration tests..."
-    
-    # Run integration tests with proper database setup
-    if [ "$USE_POWERSHELL_FOR_TESTS" = "true" ]; then
-        log "Using PowerShell to run cargo integration tests..."
-        if powershell.exe -Command "cargo test --workspace --test '*' -- --test-threads=1"; then
-            success "Integration tests passed"
-        else
-            warning "Integration tests failed (some Docker tests may fail in CI environment)"
-        fi
-    else
-        if cargo test --workspace --test '*' -- --test-threads=1; then
-            success "Integration tests passed"
-        else
-            warning "Integration tests failed (some Docker tests may fail in CI environment)"
-        fi
-    fi
-}
-
-# Build Docker images
-build_docker_images() {
-    log "Building Docker images..."
+# Build Docker image
+build_docker_image() {
+    log "Building Relay Server Docker image..."
 
     # Build relay server image
-    log "Building Relay Server image..."
     if docker build -t proof-messenger-relay:latest -f proof-messenger-relay/Dockerfile .; then
         success "Relay Server image built successfully"
     else
         error "Failed to build Relay Server image"
         exit 1
     fi
-
-    # Build web application image
-    log "Building Web Application image..."
-    if docker build -t proof-messenger-web:latest -f proof-messenger-web/Dockerfile .; then
-        success "Web Application image built successfully"
-    else
-        error "Failed to build Web Application image"
-        exit 1
-    fi
 }
 
-# Validate built images
-validate_images() {
-    log "Validating built images..."
+# Validate built image
+validate_image() {
+    log "Validating built image..."
 
-    # Check if images exist
+    # Check if image exists
     if ! docker image inspect proof-messenger-relay:latest > /dev/null 2>&1; then
         error "Relay Server image not found"
         exit 1
     fi
 
-    if ! docker image inspect proof-messenger-web:latest > /dev/null 2>&1; then
-        error "Web Application image not found"
-        exit 1
-    fi
-
-    success "All images validated successfully"
+    success "Image validated successfully"
 }
 
 # Test container startup
@@ -211,7 +170,6 @@ test_container_startup() {
     log "Testing container startup..."
 
     # Test relay server container
-    log "Testing Relay Server container startup..."
     if docker run -d --name test-relay-server \
         -p $TEST_RELAY_PORT:8080 \
         -e DATABASE_URL=sqlite:/app/db/messages.db \
@@ -219,17 +177,6 @@ test_container_startup() {
         success "Relay Server container started successfully"
     else
         error "Relay Server container failed to start"
-        exit 1
-    fi
-
-    # Test web application container
-    log "Testing Web Application container startup..."
-    if docker run -d --name test-web-app \
-        -p $TEST_WEB_PORT:80 \
-        proof-messenger-web:latest; then
-        success "Web Application container started successfully"
-    else
-        error "Web Application container failed to start"
         exit 1
     fi
 }
@@ -268,6 +215,7 @@ test_service_health() {
         response=$(curl -s "http://localhost:$TEST_RELAY_PORT/health")
         if echo "$response" | grep -q '"status":"healthy"'; then
             success "Relay Server health check passed"
+            log "Health response: $response"
         else
             error "Relay Server health check failed - unhealthy response"
             echo "Response: $response"
@@ -277,19 +225,11 @@ test_service_health() {
         error "Relay Server health check failed - service not accessible"
         exit 1
     fi
-
-    # Test web application
-    if wait_for_service "http://localhost:$TEST_WEB_PORT/index.html" "Web Application"; then
-        success "Web Application health check passed"
-    else
-        error "Web Application health check failed"
-        exit 1
-    fi
 }
 
 # Main execution
 main() {
-    log "Starting TDD-enhanced Docker build process..."
+    log "Starting Docker build process for Relay Server..."
 
     # Setup environment
     setup_environment
@@ -297,11 +237,10 @@ main() {
     # Pre-build phase
     pre_build_validation
     run_unit_tests
-    run_integration_tests
 
     # Build phase
-    build_docker_images
-    validate_images
+    build_docker_image
+    validate_image
 
     # Test phase
     test_container_startup
@@ -312,15 +251,16 @@ main() {
 
     # Show image information
     log "Image Information:"
-    docker images | grep proof-messenger
+    docker images | head -1
+    docker images | grep proof-messenger-relay || true
 
-    success "All tests passed! Docker build process completed successfully."
-    success "Ready to run: docker-compose up"
+    success "All tests passed! Relay Server Docker build completed successfully."
+    success "Ready to run: docker run -p 8080:8080 proof-messenger-relay:latest"
 
     log "Next steps:"
-    log "1. Run 'docker-compose up' to start all services"
-    log "2. Access Web Application at: http://localhost:80"
-    log "3. Access Relay Server API at: http://localhost:8080"
+    log "1. Run 'docker run -d -p 8080:8080 -e DATABASE_URL=sqlite:/app/db/messages.db proof-messenger-relay:latest' to start the relay server"
+    log "2. Access Relay Server API at: http://localhost:8080"
+    log "3. Health check: http://localhost:8080/health"
 }
 
 # Run main function

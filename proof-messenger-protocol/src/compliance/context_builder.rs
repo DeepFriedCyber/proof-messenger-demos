@@ -202,7 +202,7 @@ pub fn sanitize_existing_context(context: &Value, policy: &DataPolicy) -> Value 
 mod tests {
     use super::*;
     use serde_json::json;
-    use crate::compliance::data_policies::{DataPolicy, create_fintech_policy, create_biometric_policy, create_audit_policy};
+    use crate::compliance::data_policies::{create_fintech_policy, create_biometric_policy, create_audit_policy};
 
     #[test]
     fn test_fintech_context_sanitization() {

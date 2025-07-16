@@ -322,7 +322,7 @@ impl PIIDetector {
         if field_lower.contains("birth") || field_lower.contains("dob") {
             detected.insert(PIIType::DateOfBirth);
         }
-        if (field_lower == "tax_id" || field_lower == "taxid" || field_lower == "tin") {
+        if field_lower == "tax_id" || field_lower == "taxid" || field_lower == "tin" {
             detected.insert(PIIType::TaxID);
         }
         if field_lower.contains("passport") {

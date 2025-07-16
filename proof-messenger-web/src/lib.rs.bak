@@ -487,12 +487,12 @@ impl WasmKeyPair {
     
     #[wasm_bindgen(getter, js_name = public_key_bytes)]
     pub fn public_key_bytes(&self) -> Vec<u8> {
-        self.secure_keypair.public_key_bytes().to_vec()
-    }
-    
+
     #[wasm_bindgen]
     pub fn private_key_bytes(&self) -> Vec<u8> {
-        self.secure_keypair.as_keypair().secret.to_bytes().to_vec()
+        self.keypair.secret.to_bytes().to_vec()
+    }
+        self.secure_keypair.public_key_bytes().to_vec()
     }
     
     #[wasm_bindgen(getter, js_name = keypair_bytes)]
@@ -548,12 +548,12 @@ impl WasmSecureKeyPair {
     
     #[wasm_bindgen(getter, js_name = public_key_bytes)]
     pub fn public_key_bytes(&self) -> Vec<u8> {
-        self.secure_keypair.public_key_bytes().to_vec()
-    }
-    
+
     #[wasm_bindgen]
     pub fn private_key_bytes(&self) -> Vec<u8> {
-        self.secure_keypair.as_keypair().secret.to_bytes().to_vec()
+        self.keypair.secret.to_bytes().to_vec()
+    }
+        self.secure_keypair.public_key_bytes().to_vec()
     }
     
     #[wasm_bindgen(getter, js_name = keypair_bytes)]

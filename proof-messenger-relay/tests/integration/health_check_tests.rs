@@ -5,11 +5,12 @@ use serde_json::{json, Value};
 use sqlx::SqlitePool;
 use std::time::Duration;
 use tokio::time::timeout;
+use tower::ServiceExt;
 
 #[cfg(test)]
 mod health_check_tests {
     use super::*;
-    use crate::database_config_tests::DatabaseTestHelper;
+    use crate::integration::database_config_tests::DatabaseTestHelper;
 
     #[tokio::test]
     async fn test_health_check_with_healthy_database() {
@@ -31,7 +32,7 @@ mod health_check_tests {
         // Assert
         assert_eq!(response.status(), StatusCode::OK);
 
-        let body = axum::body::to_bytes(response.into_body()).await.unwrap();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let health_response: Value = serde_json::from_slice(&body).unwrap();
 
         assert_eq!(health_response["status"], "healthy");
@@ -66,7 +67,7 @@ mod health_check_tests {
         // Assert
         assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 
-        let body = axum::body::to_bytes(response.into_body()).await.unwrap();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let health_response: Value = serde_json::from_slice(&body).unwrap();
 
         assert_eq!(health_response["status"], "unhealthy");
@@ -151,7 +152,7 @@ mod health_check_tests {
             .unwrap();
 
         // Assert
-        let body = axum::body::to_bytes(response.into_body()).await.unwrap();
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await.unwrap();
         let health_response: Value = serde_json::from_slice(&body).unwrap();
 
         // Verify required fields

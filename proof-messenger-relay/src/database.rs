@@ -9,7 +9,6 @@ use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite, SqlitePool, Row};
 use thiserror::Error;
 use uuid::Uuid;
-use std::time::Duration;
 
 use crate::Message;
 

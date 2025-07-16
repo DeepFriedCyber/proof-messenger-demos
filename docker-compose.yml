@@ -14,10 +14,14 @@ services:
       target: runtime
     container_name: proof-messenger-relay
     ports:
-      - "8080:8080"
+      - "8081:8080"  # Tests expect port 8081
+      - "8082:8080"  # Tests also expect port 8082
     environment:
       - RUST_LOG=info
       - BIND_ADDRESS=0.0.0.0:8080
+      - DATABASE_URL=sqlite:///app/db/messages.db
+    volumes:
+      - db-data:/app/db  # Persistent database storage
     networks:
       - proof-messenger-network
     restart: unless-stopped
@@ -37,11 +41,12 @@ services:
   # =============================================================================
   web-app:
     build:
-      context: proof-messenger-web
-      dockerfile: Dockerfile.simple
+      context: .
+      dockerfile: proof-messenger-web/Dockerfile
+      target: production
     container_name: proof-messenger-web
     ports:
-      - "80:80"
+      - "8001:80"  # Tests expect port 8001
     depends_on:
       relay-server:
         condition: service_healthy
@@ -142,11 +147,13 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: 172.25.0.0/16
 
 # =============================================================================
 # Volumes
 # =============================================================================
 volumes:
   test-results:
+    driver: local
+  db-data:
     driver: local

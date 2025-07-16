@@ -5,11 +5,11 @@
 
 use axum::{
     body::{Body, to_bytes},
-    http::{Request, StatusCode, HeaderMap},
+    http::{Request, StatusCode},
     Router,
 };
 use proof_messenger_relay::Message;
-use serde_json::Value;
+
 use std::sync::Arc;
 use tower::ServiceExt;
 use ed25519_dalek::Signer;

@@ -21,7 +21,7 @@ mod docker_integration_tests {
             .args(&[
                 "run", "-d", "--name", container_name,
                 "-p", "8080:8080",
-                "-e", "DATABASE_URL=sqlite:/app/db/messages.db",
+                "-e", "DATABASE_URL=sqlite:///app/db/messages.db",
                 "proof-messenger-relay:latest"
             ])
             .output()
@@ -52,7 +52,7 @@ mod docker_integration_tests {
             .args(&[
                 "run", "-d", "--name", container_name,
                 "-p", "8081:8080",
-                "-e", "DATABASE_URL=sqlite:/app/db/messages.db",
+                "-e", "DATABASE_URL=sqlite:///app/db/messages.db",
                 "proof-messenger-relay:latest"
             ])
             .output()
@@ -101,7 +101,7 @@ mod docker_integration_tests {
                 "run", "-d", "--name", container_name,
                 "-p", "8082:8080",
                 "-v", "test-db-vol:/app/db",
-                "-e", "DATABASE_URL=sqlite:/app/db/messages.db",
+                "-e", "DATABASE_URL=sqlite:///app/db/messages.db",
                 "proof-messenger-relay:latest"
             ])
             .output()
@@ -140,7 +140,7 @@ mod docker_integration_tests {
                 "run", "-d", "--name", container_name,
                 "-p", "8082:8080",
                 "-v", "test-db-vol:/app/db",
-                "-e", "DATABASE_URL=sqlite:/app/db/messages.db",
+                "-e", "DATABASE_URL=sqlite:///app/db/messages.db",
                 "proof-messenger-relay:latest"
             ])
             .output()

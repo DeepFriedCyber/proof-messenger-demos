@@ -210,18 +210,93 @@ pub fn create_app_with_security(db: Arc<Database>) -> Router {
         .layer(CorsLayer::permissive()) // Note: Configure restrictively in production
 }
 
+/// Create the minimal application router with no middleware at all
+/// This is for debugging purposes only
+pub fn create_app_minimal(db: Arc<Database>) -> Router {
+    use tower_http::trace::TraceLayer;
+    use tower_http::set_header::SetResponseHeaderLayer;
+    use tower_http::cors::CorsLayer;
+    use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder, key_extractor::GlobalKeyExtractor};
+    
+    // Fix GovernorLayer by using GlobalKeyExtractor instead of IP-based
+    let governor_conf = GovernorConfigBuilder::default()
+        .per_second(2)
+        .burst_size(5)
+        .key_extractor(GlobalKeyExtractor)
+        .finish()
+        .unwrap();
+    
+    Router::new()
+        .route("/test", get(test_handler))
+        .with_state(db)
+        .layer(GovernorLayer {
+            config: std::sync::Arc::new(governor_conf),
+        })
+        .layer(TraceLayer::new_for_http())
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::STRICT_TRANSPORT_SECURITY,
+            axum::http::HeaderValue::from_static("max-age=63072000; includeSubDomains"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::X_CONTENT_TYPE_OPTIONS,
+            axum::http::HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::X_FRAME_OPTIONS,
+            axum::http::HeaderValue::from_static("DENY"),
+        ))
+        .layer(CorsLayer::permissive())
+}
+
+/// Create the basic application router without rate limiting or authentication
+/// This is suitable for debugging and testing
+pub fn create_app_basic(db: Arc<Database>) -> Router {
+    use tower_http::trace::TraceLayer;
+    use tower_http::cors::CorsLayer;
+    use tower_http::set_header::SetResponseHeaderLayer;
+
+    // Create the base router
+    Router::new()
+        .route("/relay", post(relay_handler))
+        .route("/messages/:group_id", get(get_messages_handler))
+        .route("/message/:message_id", get(get_message_by_id_handler))
+        .route("/health", get(health_handler))
+        .route("/ready", get(ready_handler))
+        .route("/test", get(test_handler))
+        .nest("/revocation", revocation::revocation_routes())
+        .with_state(db)
+        .layer(TraceLayer::new_for_http())
+        // Security headers
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::STRICT_TRANSPORT_SECURITY,
+            axum::http::HeaderValue::from_static("max-age=63072000; includeSubDomains"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::X_CONTENT_TYPE_OPTIONS,
+            axum::http::HeaderValue::from_static("nosniff"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            axum::http::header::X_FRAME_OPTIONS,
+            axum::http::HeaderValue::from_static("DENY"),
+        ))
+        // CORS layer (configure as needed)
+        .layer(CorsLayer::permissive()) // Note: Configure restrictively in production
+}
+
 /// Create the application router with full production security including rate limiting
 /// This version includes rate limiting that works in production environments
 pub fn create_app_with_rate_limiting(db: Arc<Database>) -> Router {
     use tower_http::trace::TraceLayer;
     use tower_http::cors::CorsLayer;
     use tower_http::set_header::SetResponseHeaderLayer;
-    use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
+    use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder, key_extractor::GlobalKeyExtractor};
 
     // Configure rate limiting: 5 requests per burst, 1 new request every 2 seconds
+    // Use GlobalKeyExtractor to avoid "Unable To Extract Key!" error
     let governor_conf = GovernorConfigBuilder::default()
         .per_second(2)
         .burst_size(5)
+        .key_extractor(GlobalKeyExtractor)
         .finish()
         .unwrap();
 
@@ -232,6 +307,7 @@ pub fn create_app_with_rate_limiting(db: Arc<Database>) -> Router {
         .route("/message/:message_id", get(get_message_by_id_handler))
         .route("/health", get(health_handler))
         .route("/ready", get(ready_handler))
+        .route("/test", get(test_handler))
         .nest("/revocation", revocation::revocation_routes())
         .with_state(db)
         // Apply security layers
@@ -424,6 +500,14 @@ async fn ready_handler(State(db): State<Arc<Database>>) -> impl IntoResponse {
     
     (status_code, ready_response)
 }
+
+/// Simple test endpoint without database dependency
+#[instrument(skip_all)]
+async fn test_handler() -> impl IntoResponse {
+    "Hello World!"
+}
+
+
 
 /// OAuth2.0-protected relay handler that requires authentication and proper scopes
 #[instrument(skip_all)]
@@ -703,50 +787,50 @@ mod tests {
         std::env::remove_var("REVOCATION_CHECK_ENABLED");
     }
 
-    #[test]
-    fn process_and_verify_message_rejects_invalid_public_key_format() {
+    #[tokio::test]
+    async fn process_and_verify_message_rejects_invalid_public_key_format() {
         // ARRANGE: Create a message with invalid public key format
         let context = b"test context";
         let mut message = create_test_message(42, context, "Test message");
         message.sender = "invalid_hex_pubkey".to_string(); // Invalid hex
 
         // ACT: Call the logic function directly
-        let result = process_and_verify_message(&message);
+        let result = process_and_verify_message(&message, None).await;
 
         // ASSERT: The result should be an InvalidPublicKey error
         assert!(matches!(result, Err(AppError::InvalidPublicKey(_))));
     }
 
-    #[test]
-    fn process_and_verify_message_rejects_wrong_signature_length() {
+    #[tokio::test]
+    async fn process_and_verify_message_rejects_wrong_signature_length() {
         // ARRANGE: Create a message with wrong signature length
         let context = b"test context";
         let mut message = create_test_message(42, context, "Test message");
         message.proof = hex::encode(&[0u8; 32]); // Wrong length (32 instead of 64)
 
         // ACT: Call the logic function directly
-        let result = process_and_verify_message(&message);
+        let result = process_and_verify_message(&message, None).await;
 
         // ASSERT: The result should be an InvalidSignature error
         assert!(matches!(result, Err(AppError::InvalidSignature(_))));
     }
 
-    #[test]
-    fn process_and_verify_message_rejects_wrong_public_key_length() {
+    #[tokio::test]
+    async fn process_and_verify_message_rejects_wrong_public_key_length() {
         // ARRANGE: Create a message with wrong public key length
         let context = b"test context";
         let mut message = create_test_message(42, context, "Test message");
         message.sender = hex::encode(&[0u8; 16]); // Wrong length (16 instead of 32)
 
         // ACT: Call the logic function directly
-        let result = process_and_verify_message(&message);
+        let result = process_and_verify_message(&message, None).await;
 
         // ASSERT: The result should be an InvalidPublicKey error
         assert!(matches!(result, Err(AppError::InvalidPublicKey(_))));
     }
 
-    #[test]
-    fn process_and_verify_message_rejects_tampered_signature() {
+    #[tokio::test]
+    async fn process_and_verify_message_rejects_tampered_signature() {
         // ARRANGE: Create a valid message then tamper with the signature
         let context = b"test context";
         let mut message = create_test_message(42, context, "Test message");
@@ -757,46 +841,46 @@ mod tests {
         message.proof = hex::encode(sig_bytes);
 
         // ACT: Call the logic function directly
-        let result = process_and_verify_message(&message);
+        let result = process_and_verify_message(&message, None).await;
 
         // ASSERT: The result should be a VerificationFailed error
         assert!(matches!(result, Err(AppError::VerificationFailed)));
     }
 
-    #[test]
-    fn process_and_verify_message_handles_empty_context() {
+    #[tokio::test]
+    async fn process_and_verify_message_handles_empty_context() {
         // ARRANGE: Create a message with empty context
         let context = b"";
         let message = create_test_message(42, context, "Message with empty context");
 
         // ACT: Call the logic function directly
-        let result = process_and_verify_message(&message);
+        let result = process_and_verify_message(&message, None).await;
 
         // ASSERT: The result should be successful (empty context is valid)
         assert!(result.is_ok());
     }
 
-    #[test]
-    fn process_and_verify_message_handles_large_context() {
+    #[tokio::test]
+    async fn process_and_verify_message_handles_large_context() {
         // ARRANGE: Create a message with large context
         let large_context = vec![0xAA; 10000]; // 10KB context
         let message = create_test_message(42, &large_context, "Message with large context");
 
         // ACT: Call the logic function directly
-        let result = process_and_verify_message(&message);
+        let result = process_and_verify_message(&message, None).await;
 
         // ASSERT: The result should be successful
         assert!(result.is_ok());
     }
 
-    #[test]
-    fn error_messages_are_informative() {
+    #[tokio::test]
+    async fn error_messages_are_informative() {
         // Test that error messages contain useful information
         let context = b"test context";
         let mut message = create_test_message(42, context, "Test message");
         message.proof = "not_hex".to_string();
 
-        let result = process_and_verify_message(&message);
+        let result = process_and_verify_message(&message, None).await;
         
         match result {
             Err(AppError::InvalidSignature(msg)) => {
@@ -830,8 +914,8 @@ mod tests {
         assert_eq!(response5.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
 
-    #[test]
-    fn message_serialization_roundtrip() {
+    #[tokio::test]
+    async fn message_serialization_roundtrip() {
         // Test that messages can be serialized and deserialized
         let context = b"serialization test";
         let original_message = create_test_message(42, context, "Serialization test");
@@ -849,7 +933,7 @@ mod tests {
         assert_eq!(original_message.proof, deserialized_message.proof);
         
         // Both should verify successfully
-        assert!(process_and_verify_message(&original_message).is_ok());
-        assert!(process_and_verify_message(&deserialized_message).is_ok());
+        assert!(process_and_verify_message(&original_message, None).await.is_ok());
+        assert!(process_and_verify_message(&deserialized_message, None).await.is_ok());
     }
 }

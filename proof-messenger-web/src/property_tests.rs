@@ -290,7 +290,7 @@ mod property_tests {
         #[test]
         fn invalid_keys_always_fail_consistently(
             invalid_len in 1usize..100,
-            data in prop::collection::vec(any::<u8>(), 1..100)
+            _data in prop::collection::vec(any::<u8>(), 1..100)
         ) {
             prop_assume!(invalid_len != PUBLIC_KEY_LENGTH && invalid_len != SECRET_KEY_LENGTH);
             
