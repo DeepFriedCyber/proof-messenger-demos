@@ -7,6 +7,7 @@ pub mod database;
 pub mod jwt_validator;
 pub mod auth_middleware;
 pub mod secure_logger;
+pub mod revocation;
 
 use axum::{
     extract::{Json, Path, Query, State},
@@ -64,6 +65,9 @@ pub enum AppError {
     #[error("Proof verification failed")]
     VerificationFailed,
     
+    #[error("Proof has been revoked")]
+    ProofRevoked,
+    
     #[error("Message processing error: {0}")]
     ProcessingError(String),
     
@@ -78,6 +82,7 @@ impl IntoResponse for AppError {
             AppError::InvalidPublicKey(_) => (StatusCode::BAD_REQUEST, self.to_string()),
             AppError::InvalidContext(_) => (StatusCode::BAD_REQUEST, self.to_string()),
             AppError::VerificationFailed => (StatusCode::UNAUTHORIZED, self.to_string()),
+            AppError::ProofRevoked => (StatusCode::FORBIDDEN, self.to_string()),
             AppError::ProcessingError(_) => (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()),
             AppError::DatabaseError(_) => (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()),
         };
@@ -94,9 +99,28 @@ impl IntoResponse for AppError {
 /// 
 /// This function is decoupled from the web framework and can be unit tested
 /// independently. It performs the core business logic of message verification.
+/// 
+/// If a database is provided, it will also check if the proof has been revoked.
 #[instrument(skip_all, fields(sender = %message.sender))]
-pub fn process_and_verify_message(message: &Message) -> Result<(), AppError> {
+pub async fn process_and_verify_message(
+    message: &Message, 
+    db: Option<&Arc<Database>>
+) -> Result<(), AppError> {
     info!("Processing message verification");
+
+    // If a database is provided, check if the proof has been revoked
+    if let Some(db) = db {
+        // Check if REVOCATION_CHECK_ENABLED environment variable is set
+        if std::env::var("REVOCATION_CHECK_ENABLED").unwrap_or_else(|_| "false".to_string()) == "true" {
+            info!("Checking if proof has been revoked");
+            
+            // Check if the proof is in the revocation list
+            if db.is_proof_revoked(&message.proof).await? {
+                warn!("Proof has been revoked: {}", message.proof);
+                return Err(AppError::ProofRevoked);
+            }
+        }
+    }
 
     // Parse the public key from hex
     let sender_bytes = hex::decode(&message.sender)
@@ -147,6 +171,7 @@ pub fn create_app(db: Arc<Database>) -> Router {
         .route("/message/:message_id", get(get_message_by_id_handler))
         .route("/health", get(health_handler))
         .route("/ready", get(ready_handler))
+        .nest("/revocation", revocation::revocation_routes())
         .with_state(db)
 }
 
@@ -164,6 +189,7 @@ pub fn create_app_with_security(db: Arc<Database>) -> Router {
         .route("/message/:message_id", get(get_message_by_id_handler))
         .route("/health", get(health_handler))
         .route("/ready", get(ready_handler))
+        .nest("/revocation", revocation::revocation_routes())
         .with_state(db)
         // Apply security layers
         .layer(TraceLayer::new_for_http())
@@ -206,6 +232,7 @@ pub fn create_app_with_rate_limiting(db: Arc<Database>) -> Router {
         .route("/message/:message_id", get(get_message_by_id_handler))
         .route("/health", get(health_handler))
         .route("/ready", get(ready_handler))
+        .nest("/revocation", revocation::revocation_routes())
         .with_state(db)
         // Apply security layers
         .layer(GovernorLayer {
@@ -246,6 +273,7 @@ pub fn create_app_with_oauth(
         .route("/relay", post(authenticated_relay_handler))
         .route("/messages/:group_id", get(authenticated_get_messages_handler))
         .route("/message/:message_id", get(authenticated_get_message_by_id_handler))
+        .nest("/revocation", revocation::authenticated_revocation_routes())
         .layer(middleware::from_fn_with_state(jwt_validator.clone(), auth_middleware))
         .with_state((db.clone(), jwt_validator.clone(), secure_logger.clone()));
 
@@ -253,7 +281,7 @@ pub fn create_app_with_oauth(
     let public_routes = Router::new()
         .route("/health", get(health_handler))
         .route("/ready", get(ready_handler))
-        .with_state(db);
+        .with_state(db.clone());
 
     // Combine routes and apply security layers
     Router::new()
@@ -285,8 +313,8 @@ async fn relay_handler(
 ) -> Result<impl IntoResponse, AppError> {
     info!("Received message for relay");
     
-    // Delegate to the unit-tested function
-    process_and_verify_message(&payload)?;
+    // Delegate to the unit-tested function, passing the database for revocation check
+    process_and_verify_message(&payload, Some(&db)).await?;
     
     // Store the verified message in the database
     let stored_message = StoredMessage::from(payload);
@@ -341,28 +369,38 @@ async fn get_message_by_id_handler(
 }
 
 /// Health check endpoint for container orchestration
-#[instrument]
-async fn health_handler(State(db): State<Arc<Database>>) -> impl IntoResponse {
-    // Check database health
-    let db_status = match db.health_check().await {
-        Ok(_) => "healthy",
-        Err(_) => "unhealthy",
-    };
+#[instrument(skip_all)]
+async fn health_handler(
+    State(db): State<Arc<Database>>,
+) -> impl IntoResponse {
+    let timestamp = chrono::Utc::now().to_rfc3339();
     
-    let overall_status = if db_status == "healthy" { "healthy" } else { "unhealthy" };
-    let status_code = if overall_status == "healthy" { StatusCode::OK } else { StatusCode::SERVICE_UNAVAILABLE };
-    
-    let health_response = Json(serde_json::json!({
-        "status": overall_status,
-        "service": "proof-messenger-relay",
-        "version": "1.0.0",
-        "timestamp": chrono::Utc::now().to_rfc3339(),
-        "checks": {
-            "database": db_status
+    // Test database connection
+    match db.health_check().await {
+        Ok(_) => {
+            let health_response = Json(serde_json::json!({
+                "status": "healthy",
+                "database": "connected",
+                "service": "proof-messenger-relay",
+                "version": env!("CARGO_PKG_VERSION"),
+                "timestamp": timestamp
+            }));
+            
+            (StatusCode::OK, health_response)
+        },
+        Err(e) => {
+            let health_response = Json(serde_json::json!({
+                "status": "unhealthy",
+                "database": "disconnected",
+                "service": "proof-messenger-relay",
+                "version": env!("CARGO_PKG_VERSION"),
+                "timestamp": timestamp,
+                "error": e.to_string()
+            }));
+            
+            (StatusCode::SERVICE_UNAVAILABLE, health_response)
         }
-    }));
-    
-    (status_code, health_response)
+    }
 }
 
 /// Readiness check endpoint
@@ -442,8 +480,8 @@ async fn authenticated_relay_handler(
         }
     }
     
-    // Delegate to the unit-tested function
-    process_and_verify_message(&payload)?;
+    // Delegate to the unit-tested function, passing the database for revocation check
+    process_and_verify_message(&payload, Some(&db)).await?;
     
     // Store the verified message in the database with user context
     let stored_message = StoredMessage::from(payload.clone());
@@ -592,8 +630,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn process_and_verify_message_rejects_tampered_context() {
+    #[tokio::test]
+    async fn process_and_verify_message_rejects_tampered_context() {
         // ARRANGE: Create a message where the signature is for a different context
         let keypair = generate_keypair_with_seed(42);
         let original_context = b"context-for-signature";
@@ -608,37 +646,61 @@ mod tests {
         };
 
         // ACT: Call the logic function directly
-        let result = process_and_verify_message(&tampered_message);
+        let result = process_and_verify_message(&tampered_message, None).await;
 
         // ASSERT: The result must be a VerificationFailed error
         assert!(matches!(result, Err(AppError::VerificationFailed)));
     }
 
-    #[test]
-    fn process_and_verify_message_accepts_valid_message() {
+    #[tokio::test]
+    async fn process_and_verify_message_accepts_valid_message() {
         // ARRANGE: Create a valid message
         let context = b"valid context for signature";
         let message = create_test_message(42, context, "Valid test message");
 
         // ACT: Call the logic function directly
-        let result = process_and_verify_message(&message);
+        let result = process_and_verify_message(&message, None).await;
 
         // ASSERT: The result should be successful
         assert!(result.is_ok());
     }
 
-    #[test]
-    fn process_and_verify_message_rejects_invalid_signature_format() {
+    #[tokio::test]
+    async fn process_and_verify_message_rejects_invalid_signature_format() {
         // ARRANGE: Create a message with invalid signature format
         let context = b"test context";
         let mut message = create_test_message(42, context, "Test message");
         message.proof = "invalid_hex_signature".to_string(); // Invalid hex
 
         // ACT: Call the logic function directly
-        let result = process_and_verify_message(&message);
+        let result = process_and_verify_message(&message, None).await;
 
         // ASSERT: The result should be an InvalidSignature error
         assert!(matches!(result, Err(AppError::InvalidSignature(_))));
+    }
+    
+    #[tokio::test]
+    async fn process_and_verify_message_rejects_revoked_proof() {
+        // ARRANGE: Create a valid message
+        let context = b"valid context for signature";
+        let message = create_test_message(42, context, "Valid test message");
+        
+        // Create a database with the proof revoked
+        let db = Database::new("sqlite::memory:").await.unwrap();
+        db.migrate().await.unwrap();
+        db.revoke_proof(&message.proof, Some("Test revocation"), None, None).await.unwrap();
+        
+        // Set environment variable for revocation check
+        std::env::set_var("REVOCATION_CHECK_ENABLED", "true");
+        
+        // ACT: Call the logic function with database that has revoked the proof
+        let result = process_and_verify_message(&message, Some(&Arc::new(db))).await;
+        
+        // ASSERT: The result should be a ProofRevoked error
+        assert!(matches!(result, Err(AppError::ProofRevoked)));
+        
+        // Clean up environment variable
+        std::env::remove_var("REVOCATION_CHECK_ENABLED");
     }
 
     #[test]

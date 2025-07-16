@@ -2,12 +2,14 @@
 //!
 //! This module provides secure storage and retrieval of verified messages
 //! using SQLite for development and testing, with PostgreSQL support for production.
+//! Also includes proof revocation functionality.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite, SqlitePool, Row};
 use thiserror::Error;
 use uuid::Uuid;
+use std::time::Duration;
 
 use crate::Message;
 
@@ -28,6 +30,9 @@ pub enum DatabaseError {
     
     #[error("Serialization error: {0}")]
     SerializationError(String),
+    
+    #[error("Proof already revoked: {0}")]
+    ProofAlreadyRevoked(String),
 }
 
 /// Stored message with metadata
@@ -51,6 +56,21 @@ pub struct StoredMessage {
     pub verified: bool,
 }
 
+/// Revoked proof information
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+pub struct RevokedProof {
+    /// The signature of the revoked proof (hex encoded)
+    pub proof_signature: String,
+    /// When the proof was revoked
+    pub revoked_at: DateTime<Utc>,
+    /// Optional reason for revocation
+    pub reason: Option<String>,
+    /// Who revoked the proof (user ID or system)
+    pub revoked_by: Option<String>,
+    /// Optional expiration time for TTL
+    pub expires_at: Option<DateTime<Utc>>,
+}
+
 impl From<Message> for StoredMessage {
     fn from(message: Message) -> Self {
         Self {
@@ -62,6 +82,31 @@ impl From<Message> for StoredMessage {
             proof: message.proof,
             created_at: Utc::now(),
             verified: false, // Will be set after verification
+        }
+    }
+}
+
+/// Database configuration
+#[derive(Debug, Clone)]
+pub struct DatabaseConfig {
+    pub database_url: String,
+}
+
+impl DatabaseConfig {
+    /// Create a new database configuration with default values
+    pub fn new(database_url: &str) -> Self {
+        Self {
+            database_url: database_url.to_string(),
+        }
+    }
+    
+    /// Create a database configuration from environment variables
+    pub fn from_env() -> Self {
+        let database_url = std::env::var("DATABASE_URL")
+            .unwrap_or_else(|_| "sqlite:/app/db/messages.db".to_string());
+            
+        Self {
+            database_url,
         }
     }
 }
@@ -176,10 +221,118 @@ impl Database {
 
     /// Get database health status
     pub async fn health_check(&self) -> Result<(), DatabaseError> {
+        // Try to execute a simple query to verify database connection
         sqlx::query("SELECT 1")
             .fetch_one(&self.pool)
             .await?;
+            
+        // Check if migrations table exists (indicates proper schema setup)
+        let migrations_result = sqlx::query("SELECT name FROM sqlite_master WHERE type='table' AND name='_sqlx_migrations'")
+            .fetch_optional(&self.pool)
+            .await?;
+            
+        if migrations_result.is_none() {
+            return Err(DatabaseError::MigrationError("Migrations table not found".to_string()));
+        }
+        
         Ok(())
+    }
+    
+    /// Revoke a proof by adding it to the revocation list
+    pub async fn revoke_proof(
+        &self, 
+        proof_signature: &str, 
+        reason: Option<&str>, 
+        revoked_by: Option<&str>,
+        ttl_hours: Option<i64>
+    ) -> Result<(), DatabaseError> {
+        // Check if proof is already revoked
+        let existing = sqlx::query("SELECT proof_signature FROM revoked_proofs WHERE proof_signature = ?1")
+            .bind(proof_signature)
+            .fetch_optional(&self.pool)
+            .await?;
+            
+        if existing.is_some() {
+            return Err(DatabaseError::ProofAlreadyRevoked(proof_signature.to_string()));
+        }
+        
+        // Calculate expiration time if TTL is provided
+        let expires_at = ttl_hours.map(|hours| {
+            Utc::now() + chrono::Duration::hours(hours)
+        });
+        
+        // Insert into revocation list
+        sqlx::query(
+            r#"
+            INSERT INTO revoked_proofs (proof_signature, revoked_at, reason, revoked_by, expires_at)
+            VALUES (?1, ?2, ?3, ?4, ?5)
+            "#
+        )
+        .bind(proof_signature)
+        .bind(Utc::now())
+        .bind(reason)
+        .bind(revoked_by)
+        .bind(expires_at)
+        .execute(&self.pool)
+        .await?;
+        
+        Ok(())
+    }
+    
+    /// Check if a proof has been revoked
+    pub async fn is_proof_revoked(&self, proof_signature: &str) -> Result<bool, DatabaseError> {
+        // First, clean up expired revocations
+        self.cleanup_expired_revocations().await?;
+        
+        // Check if proof is in the revocation list
+        let result = sqlx::query(
+            r#"
+            SELECT proof_signature FROM revoked_proofs 
+            WHERE proof_signature = ?1
+            AND (expires_at IS NULL OR expires_at > ?2)
+            "#
+        )
+        .bind(proof_signature)
+        .bind(Utc::now())
+        .fetch_optional(&self.pool)
+        .await?;
+        
+        Ok(result.is_some())
+    }
+    
+    /// Clean up expired revocations
+    pub async fn cleanup_expired_revocations(&self) -> Result<u64, DatabaseError> {
+        let result = sqlx::query(
+            r#"
+            DELETE FROM revoked_proofs
+            WHERE expires_at IS NOT NULL AND expires_at < ?1
+            "#
+        )
+        .bind(Utc::now())
+        .execute(&self.pool)
+        .await?;
+        
+        Ok(result.rows_affected())
+    }
+    
+    /// Get all active revocations
+    pub async fn get_active_revocations(&self) -> Result<Vec<RevokedProof>, DatabaseError> {
+        // First, clean up expired revocations
+        self.cleanup_expired_revocations().await?;
+        
+        let revocations = sqlx::query_as::<_, RevokedProof>(
+            r#"
+            SELECT proof_signature, revoked_at, reason, revoked_by, expires_at
+            FROM revoked_proofs
+            WHERE expires_at IS NULL OR expires_at > ?1
+            ORDER BY revoked_at DESC
+            "#
+        )
+        .bind(Utc::now())
+        .fetch_all(&self.pool)
+        .await?;
+        
+        Ok(revocations)
     }
 }
 
@@ -388,6 +541,99 @@ mod tests {
         for result in results {
             assert!(result.unwrap().is_ok());
         }
+    }
+    
+    #[tokio::test]
+    async fn test_revoke_and_check_proof() {
+        // ARRANGE: Setup database
+        let db = setup_test_db().await;
+        let proof_signature = "test_signature_123";
+        
+        // ACT: Revoke a proof
+        db.revoke_proof(proof_signature, Some("Test revocation"), Some("test_user"), Some(24)).await.unwrap();
+        
+        // ASSERT: Proof should be marked as revoked
+        let is_revoked = db.is_proof_revoked(proof_signature).await.unwrap();
+        assert!(is_revoked);
+    }
+    
+    #[tokio::test]
+    async fn test_revoke_proof_already_revoked() {
+        // ARRANGE: Setup database and revoke a proof
+        let db = setup_test_db().await;
+        let proof_signature = "already_revoked_signature";
+        
+        db.revoke_proof(proof_signature, None, None, None).await.unwrap();
+        
+        // ACT: Try to revoke the same proof again
+        let result = db.revoke_proof(proof_signature, None, None, None).await;
+        
+        // ASSERT: Should return ProofAlreadyRevoked error
+        assert!(matches!(result, Err(DatabaseError::ProofAlreadyRevoked(_))));
+    }
+    
+    #[tokio::test]
+    async fn test_expired_revocation() {
+        // ARRANGE: Setup database and revoke a proof with a very short TTL
+        let db = setup_test_db().await;
+        let proof_signature = "soon_to_expire_signature";
+        
+        // Set expiration to 0 hours (immediate expiration for testing)
+        db.revoke_proof(proof_signature, None, None, Some(0)).await.unwrap();
+        
+        // Force expiration by manipulating the database directly
+        sqlx::query("UPDATE revoked_proofs SET expires_at = datetime('now', '-1 hour') WHERE proof_signature = ?1")
+            .bind(proof_signature)
+            .execute(&db.pool)
+            .await
+            .unwrap();
+        
+        // ACT: Check if proof is still revoked (should trigger cleanup)
+        let is_revoked = db.is_proof_revoked(proof_signature).await.unwrap();
+        
+        // ASSERT: Proof should no longer be considered revoked
+        assert!(!is_revoked);
+    }
+    
+    #[tokio::test]
+    async fn test_get_active_revocations() {
+        // ARRANGE: Setup database and add multiple revocations
+        let db = setup_test_db().await;
+        
+        // Add permanent revocation
+        db.revoke_proof("permanent_revocation", Some("Never expires"), Some("admin"), None).await.unwrap();
+        
+        // Add temporary revocation
+        db.revoke_proof("temporary_revocation", Some("Will expire"), Some("user"), Some(24)).await.unwrap();
+        
+        // Add expired revocation
+        db.revoke_proof("expired_revocation", Some("Already expired"), Some("user"), Some(0)).await.unwrap();
+        
+        // Force expiration
+        sqlx::query("UPDATE revoked_proofs SET expires_at = datetime('now', '-1 hour') WHERE proof_signature = ?1")
+            .bind("expired_revocation")
+            .execute(&db.pool)
+            .await
+            .unwrap();
+        
+        // ACT: Get active revocations
+        let active_revocations = db.get_active_revocations().await.unwrap();
+        
+        // ASSERT: Should only include non-expired revocations
+        assert_eq!(active_revocations.len(), 2);
+        
+        // Check that the expired one is not included
+        let contains_expired = active_revocations.iter()
+            .any(|r| r.proof_signature == "expired_revocation");
+        assert!(!contains_expired);
+        
+        // Check that permanent and temporary are included
+        let contains_permanent = active_revocations.iter()
+            .any(|r| r.proof_signature == "permanent_revocation");
+        let contains_temporary = active_revocations.iter()
+            .any(|r| r.proof_signature == "temporary_revocation");
+        assert!(contains_permanent);
+        assert!(contains_temporary);
     }
 
     #[tokio::test]

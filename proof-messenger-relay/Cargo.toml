@@ -31,7 +31,24 @@ aes-gcm = "0.10"
 rand = "0.8"
 
 [dev-dependencies]
+# Testing dependencies
 hyper = "1.0"
 proptest = "1.4"
 tokio-test = "0.4"
 futures = "0.3"
+tempfile = "3.8"
+reqwest = { version = "0.11", features = ["json"] }
+wiremock = "0.5"
+criterion = { version = "0.5", features = ["html_reports"] }
+mockall = "0.11"
+
+# Additional testing utilities
+serde_yaml = "0.9"
+env_logger = "0.10"
+serial_test = "3.0"
+
+[features]
+default = []
+test-utils = []
+integration-tests = []
+docker-tests = []
