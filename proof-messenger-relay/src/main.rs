@@ -9,7 +9,7 @@ async fn main() {
 
     // Initialize database
     let database_url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "sqlite:///app/db/messages.db".to_string());
+        .unwrap_or_else(|_| "sqlite:/app/db/messages.db".to_string());
     
     info!("Connecting to database: {}", database_url);
     
