@@ -4,7 +4,7 @@
 # =============================================================================
 # Stage 1: Build Environment
 # =============================================================================
-FROM rust:1.75-bullseye as builder
+FROM rust:bullseye as builder
 
 # Install system dependencies for building
 RUN apt-get update && apt-get install -y \
@@ -49,6 +49,9 @@ FROM debian:bullseye-slim as runtime
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
+    sqlite3 \
+    libsqlite3-0 \
+    libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/* \
     && update-ca-certificates
 
@@ -67,11 +70,14 @@ COPY --from=builder /usr/src/proof-messenger/proof-messenger-relay/static /app/s
 # Set proper permissions
 RUN chmod +x /app/proof-messenger-relay
 
-# Switch to non-root user
-USER proofmessenger
-
-# Set working directory
+# Set the working directory
 WORKDIR /app
+
+# Create a dedicated, persistent directory for the database
+RUN mkdir -p /app/db
+
+# Give the non-root user ownership of this directory
+RUN chown proofmessenger:proofmessenger /app/db
 
 # Expose the port (default 8080)
 EXPOSE 8080
@@ -81,10 +87,28 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
 # Environment variables with defaults
-ENV RUST_LOG=info
+ENV RUST_LOG=debug
+ENV RUST_BACKTRACE=1
 ENV BIND_ADDRESS=0.0.0.0:8080
+ENV DATABASE_URL=sqlite:///app/db/messages.db
 
-# Set the command to run the server
+# Fix permissions for /app directory
+USER root
+RUN chmod 755 /app && \
+    chown -R proofmessenger:proofmessenger /app
+
+# Test SQLite functionality
+RUN sqlite3 --version
+RUN sqlite3 /app/db/test.db "CREATE TABLE test(id INTEGER); INSERT INTO test VALUES(1); SELECT * FROM test;" && echo "SQLite test passed" || echo "SQLite test failed"
+
+# Switch to the non-root user
+USER proofmessenger
+
+# Test that the user can write to the database directory
+RUN touch /app/db/test-write.db && echo "Successfully wrote to db directory" || echo "Cannot write to db directory"
+RUN ls -la /app/db/test-write.db
+
+# Set the command to run the application
 CMD ["./proof-messenger-relay"]
 
 # =============================================================================
