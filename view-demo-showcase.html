@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Showcase Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        
+        .tab.active {
+            background-color: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+            font-weight: bold;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: #4a6cf7;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        
+        .btn:hover {
+            background-color: #3a5ce7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Proof-Messenger Demo Showcase Viewer</h1>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="openTab(event, 'fullHtml')">Full HTML Version</div>
+            <div class="tab" onclick="openTab(event, 'linkedinHtml')">LinkedIn Version</div>
+            <div class="tab" onclick="openTab(event, 'markdown')">Markdown Version</div>
+            <div class="tab" onclick="openTab(event, 'readme')">README</div>
+        </div>
+        
+        <div id="fullHtml" class="tab-content active">
+            <h2>Full HTML Demo Showcase</h2>
+            <p>This is the complete HTML version with full styling, suitable for websites:</p>
+            <iframe src="demo-showcase.html"></iframe>
+            <a href="demo-showcase.html" target="_blank" class="btn">Open in New Tab</a>
+        </div>
+        
+        <div id="linkedinHtml" class="tab-content">
+            <h2>LinkedIn HTML Demo Showcase</h2>
+            <p>This is the simplified version optimized for LinkedIn:</p>
+            <iframe src="linkedin-demo-showcase.html"></iframe>
+            <a href="linkedin-demo-showcase.html" target="_blank" class="btn">Open in New Tab</a>
+        </div>
+        
+        <div id="markdown" class="tab-content">
+            <h2>Markdown Demo Showcase</h2>
+            <p>This is the markdown version suitable for GitHub or documentation:</p>
+            <iframe src="DEMO_SHOWCASE.md"></iframe>
+            <a href="DEMO_SHOWCASE.md" target="_blank" class="btn">Open File</a>
+        </div>
+        
+        <div id="readme" class="tab-content">
+            <h2>Demo Showcase README</h2>
+            <p>Instructions for using the demo showcase files:</p>
+            <iframe src="DEMO_SHOWCASE_README.md"></iframe>
+            <a href="DEMO_SHOWCASE_README.md" target="_blank" class="btn">Open File</a>
+        </div>
+    </div>
+    
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            
+            // Hide all tab content
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].className = tabcontent[i].className.replace(" active", "");
+            }
+            
+            // Remove active class from all tabs
+            tablinks = document.getElementsByClassName("tab");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            
+            // Show the current tab and add active class
+            document.getElementById(tabName).className += " active";
+            evt.currentTarget.className += " active";
+        }
+    </script>
+</body>
+</html>
