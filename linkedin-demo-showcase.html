@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proof-Messenger Protocol Demos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1, h2, h3 {
+            color: #2867B2; /* LinkedIn blue */
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+        }
+        
+        .demo-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        
+        .demo-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2867B2;
+        }
+        
+        .demo-description {
+            margin-bottom: 10px;
+        }
+        
+        .feature-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .feature-list li {
+            margin-bottom: 5px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #0A66C2;
+        }
+        
+        .demo-link {
+            display: inline-block;
+            background-color: #0A66C2;
+            color: white;
+            padding: 8px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .demo-link:hover {
+            background-color: #004182;
+        }
+        
+        .tech-badge {
+            display: inline-block;
+            background-color: #f0f0f0;
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Proof-Messenger Protocol: Interactive Demo Showcase</h1>
+    <p>A programmable proof protocol that enables secure, verifiable, and auditable authorization workflows across industries. While passkeys solved login, Proof-Messenger solves trust.</p>
+    
+    <div class="demo-section">
+        <h2>Industry-Specific Demos</h2>
+        
+        <div class="demo-card">
+            <div class="demo-title">💰 FinTech: Multi-Party Wire Transfer</div>
+            <div class="demo-description">Experience a secure multi-party approval workflow for high-value financial transactions with cryptographically locked transaction details.</div>
+            <ul class="feature-list">
+                <li>Sequential approval chain: Initiator → Manager → CFO</li>
+                <li>Non-repudiable audit trail for compliance</li>
+                <li>Real-time proof generation and verification</li>
+            </ul>
+            <a href="https://your-domain.com/demos/fintech-wire-transfer.html" class="demo-link">Launch Demo</a>
+        </div>
+        
+        <div class="demo-card">
+            <div class="demo-title">🏥 Healthcare: Privacy-Proof Record Access</div>
+            <div class="demo-description">See how patient-driven consent unlocks specific encrypted resources with automatic HIPAA compliance logging.</div>
+            <ul class="feature-list">
+                <li>Doctor requests specific medical record access</li>
+                <li>Patient provides biometric consent authorization</li>
+                <li>Records remain encrypted until consent granted</li>
+            </ul>
+            <a href="https://your-domain.com/demos/healthcare-record-access.html" class="demo-link">Launch Demo</a>
+        </div>
+        
+        <div class="demo-card">
+            <div class="demo-title">📜 Legal: Document Signing</div>
+            <div class="demo-description">Witness a sequential signing workflow with portable, self-verifiable proof bundles.</div>
+            <ul class="feature-list">
+                <li>Step-by-step signing process (Lawyer A → Lawyer B → Client)</li>
+                <li>Document becomes immutable after first signature</li>
+                <li>Downloadable verifiable proof bundle</li>
+            </ul>
+            <a href="https://your-domain.com/demos/legal-document-signing.html" class="demo-link">Launch Demo</a>
+        </div>
+        
+        <div class="demo-card">
+            <div class="demo-title">🧾 Government: Post-Quantum Secure Command</div>
+            <div class="demo-description">Explore crypto-agility and hybrid security models with future-proof quantum-resistant signatures.</div>
+            <ul class="feature-list">
+                <li>Standard Ed25519 vs. Post-Quantum hybrid crypto</li>
+                <li>Real-time cryptographic protocol selection</li>
+                <li>Visual verification status indicators</li>
+            </ul>
+            <a href="https://your-domain.com/demos/government-secure-command.html" class="demo-link">Launch Demo</a>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Technical Capability Demos</h2>
+        
+        <div class="demo-card">
+            <div class="demo-title">🔐 Biometric Approval Flow</div>
+            <div class="demo-description">See how device biometrics enhance security with step-by-step approval and verification.</div>
+            <a href="https://your-domain.com/demos/biometric-approval-demo.html" class="demo-link">View Demo</a>
+        </div>
+        
+        <div class="demo-card">
+            <div class="demo-title">📊 Compliance Module</div>
+            <div class="demo-description">Explore automatic regulatory compliance with real-time logging and audit trail generation.</div>
+            <a href="https://your-domain.com/demos/compliance-demo.html" class="demo-link">View Demo</a>
+        </div>
+        
+        <div class="demo-card">
+            <div class="demo-title">🔄 Complete Integration Demo</div>
+            <div class="demo-description">See how all components work together in a comprehensive end-to-end workflow.</div>
+            <a href="https://your-domain.com/demos/complete-integration-demo.html" class="demo-link">Launch Demo</a>
+        </div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>Technology Stack</h2>
+        <p>Built with modern, secure technologies:</p>
+        <div>
+            <span class="tech-badge">Rust</span>
+            <span class="tech-badge">WebAssembly</span>
+            <span class="tech-badge">Post-Quantum Cryptography</span>
+            <span class="tech-badge">Immutable Data Structures</span>
+        </div>
+    </div>
+    
+    <p><strong>Note:</strong> These demos showcase the capabilities of the Proof-Messenger protocol in simulated environments. For production implementations, please contact our team for enterprise deployment options.</p>
+</body>
+</html>
