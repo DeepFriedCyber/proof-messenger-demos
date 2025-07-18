@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  grafana-agent:
+    image: grafana/agent:latest
+    container_name: grafana-agent
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./grafana-agent-config-fixed.yml:/etc/agent/agent.yml
+    command: 
+      - -config.file=/etc/agent/agent.yml
+      - -metrics.wal-directory=/tmp/agent/wal
+    networks:
+      - proof-messenger-network
+networks:
+  proof-messenger-network:
+    external: true
+    name: rustprotocol_proof-messenger-network

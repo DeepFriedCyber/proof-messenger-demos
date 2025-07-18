@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s     # How often to scrape targets
+  evaluation_interval: 15s # How often to evaluate rules
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'proof-messenger-relay'
+    # Prometheus will automatically poll this target for metrics
+    static_configs:
+      # 'relay-server' is the service name from docker-compose, 8080 is the port inside the container
+      - targets: ['relay-server:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 5s
+    scrape_timeout: 5s
+
+  # Monitor Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

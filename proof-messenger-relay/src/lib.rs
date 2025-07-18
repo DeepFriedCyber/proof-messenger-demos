@@ -8,6 +8,7 @@ pub mod jwt_validator;
 pub mod auth_middleware;
 pub mod secure_logger;
 pub mod revocation;
+pub mod metrics;
 
 use axum::{
     extract::{Json, Path, Query, State},
@@ -300,20 +301,31 @@ pub fn create_app_with_rate_limiting(db: Arc<Database>) -> Router {
         .finish()
         .unwrap();
 
-    // Create the base router
-    Router::new()
+    // Create protected routes (with rate limiting)
+    let protected_routes = Router::new()
         .route("/relay", post(relay_handler))
         .route("/messages/:group_id", get(get_messages_handler))
         .route("/message/:message_id", get(get_message_by_id_handler))
-        .route("/health", get(health_handler))
-        .route("/ready", get(ready_handler))
         .route("/test", get(test_handler))
         .nest("/revocation", revocation::revocation_routes())
-        .with_state(db)
-        // Apply security layers
+        .with_state(db.clone())
+        // Apply rate limiting only to protected routes
         .layer(GovernorLayer {
             config: std::sync::Arc::new(governor_conf),
-        })
+        });
+
+    // Create public routes (no rate limiting for health checks)
+    let public_routes = Router::new()
+        .route("/health", get(health_handler))
+        .route("/ready", get(ready_handler))
+        .route("/metrics", get(metrics::metrics_handler))
+        .with_state(db);
+
+    // Combine routes
+    Router::new()
+        .merge(protected_routes)
+        .merge(public_routes)
+        .layer(axum::middleware::from_fn(metrics::metrics_middleware))
         .layer(TraceLayer::new_for_http())
         // Security headers
         .layer(SetResponseHeaderLayer::if_not_present(
@@ -358,11 +370,18 @@ pub fn create_app_with_oauth(
         .route("/health", get(health_handler))
         .route("/ready", get(ready_handler))
         .with_state(db.clone());
+    
+    // Create metrics route (doesn't need database state)
+    tracing::info!("Registering metrics route at /metrics");
+    let metrics_routes = Router::new()
+        .route("/metrics", get(metrics::metrics_handler));
 
     // Combine routes and apply security layers
     Router::new()
         .merge(protected_routes)
         .merge(public_routes)
+        .merge(metrics_routes)
+        .layer(axum::middleware::from_fn(metrics::metrics_middleware))
         .layer(TraceLayer::new_for_http())
         // Security headers
         .layer(SetResponseHeaderLayer::if_not_present(
