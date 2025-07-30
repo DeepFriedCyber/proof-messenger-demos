@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Headers Test - Proof Messenger</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.3);
+            border: 1px solid #4CAF50;
+        }
+        .warning {
+            background: rgba(255, 193, 7, 0.3);
+            border: 1px solid #FFC107;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.3);
+            border: 1px solid #F44336;
+        }
+        .info {
+            background: rgba(33, 150, 243, 0.3);
+            border: 1px solid #2196F3;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .external-test {
+            background: #2196F3;
+        }
+        .external-test:hover {
+            background: #1976D2;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .header-check {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        .status-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-pass {
+            background: #4CAF50;
+        }
+        .status-fail {
+            background: #F44336;
+        }
+        .status-unknown {
+            background: #FFC107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Security Headers Test</h1>
+        
+        <div class="test-section">
+            <h2>Automated Header Detection</h2>
+            <p>This tool checks if security headers are properly configured on your site.</p>
+            <button onclick="checkHeaders()">🔍 Check Security Headers</button>
+            <button class="external-test" onclick="openSecurityHeadersTest()">🌐 Test on SecurityHeaders.com</button>
+            <button class="external-test" onclick="openMozillaObservatory()">🔬 Test on Mozilla Observatory</button>
+        </div>
+
+        <div id="results"></div>
+
+        <div class="test-section">
+            <h2>Expected Security Headers</h2>
+            <div class="info test-result">
+                <strong>Headers that should be present:</strong><br>
+                • X-Frame-Options: DENY<br>
+                • X-Content-Type-Options: nosniff<br>
+                • Referrer-Policy: strict-origin-when-cross-origin<br>
+                • Content-Security-Policy: [comprehensive policy]<br>
+                • Cross-Origin-Embedder-Policy: credentialless<br>
+                • Cross-Origin-Opener-Policy: same-origin<br>
+                • Cross-Origin-Resource-Policy: cross-origin<br>
+                • Permissions-Policy: [restricted permissions]
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Manual Verification Steps</h2>
+            <div class="info test-result">
+                <strong>1. Browser Developer Tools:</strong><br>
+                • Open DevTools (F12)<br>
+                • Go to Network tab<br>
+                • Refresh page<br>
+                • Click on the main document request<br>
+                • Check Response Headers section<br><br>
+                
+                <strong>2. Command Line Test:</strong><br>
+                <code>curl -I https://your-demo-site.github.io</code><br><br>
+                
+                <strong>3. Online Security Scanners:</strong><br>
+                • SecurityHeaders.com (Grade A/A+ expected)<br>
+                • Mozilla Observatory (90+ score expected)<br>
+                • CSP Evaluator by Google
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Troubleshooting</h2>
+            <div class="warning test-result">
+                <strong>If headers are missing:</strong><br>
+                • Ensure _headers file is in repository root<br>
+                • Wait 1-5 minutes for GitHub Pages deployment<br>
+                • Check file format (no BOM, Unix line endings)<br>
+                • Verify GitHub Pages is enabled in repository settings<br><br>
+                
+                <strong>If CSP violations occur:</strong><br>
+                • Check browser console for specific errors<br>
+                • Add required domains to CSP policy<br>
+                • Test with CSP in report-only mode first
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function checkHeaders() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="test-section"><h2>Header Check Results</h2><div id="header-results"></div></div>';
+            
+            const headerResultsDiv = document.getElementById('header-results');
+            
+            // Headers to check
+            const expectedHeaders = [
+                'x-frame-options',
+                'x-content-type-options',
+                'referrer-policy',
+                'content-security-policy',
+                'cross-origin-embedder-policy',
+                'cross-origin-opener-policy',
+                'cross-origin-resource-policy',
+                'permissions-policy'
+            ];
+            
+            // Make a request to check headers
+            fetch(window.location.href, { method: 'HEAD' })
+                .then(response => {
+                    headerResultsDiv.innerHTML = '<p>Checking headers...</p>';
+                    
+                    let resultsHTML = '';
+                    let passCount = 0;
+                    
+                    expectedHeaders.forEach(header => {
+                        const value = response.headers.get(header);
+                        const status = value ? 'pass' : 'fail';
+                        const statusClass = value ? 'status-pass' : 'status-fail';
+                        
+                        if (value) passCount++;
+                        
+                        resultsHTML += `
+                            <div class="header-check">
+                                <span>${header}</span>
+                                <div>
+                                    <span class="status-indicator ${statusClass}"></span>
+                                    <span>${value ? '✓' : '✗'}</span>
+                                </div>
+                            </div>
+                        `;
+                        
+                        if (value) {
+                            resultsHTML += `<div class="success test-result"><strong>${header}:</strong> ${value}</div>`;
+                        }
+                    });
+                    
+                    const grade = passCount >= 7 ? 'A+' : passCount >= 5 ? 'A' : passCount >= 3 ? 'B' : 'C';
+                    const gradeClass = passCount >= 7 ? 'success' : passCount >= 5 ? 'success' : passCount >= 3 ? 'warning' : 'error';
+                    
+                    headerResultsDiv.innerHTML = `
+                        <div class="${gradeClass} test-result">
+                            <strong>Security Grade: ${grade}</strong><br>
+                            Headers Present: ${passCount}/${expectedHeaders.length}
+                        </div>
+                        ${resultsHTML}
+                    `;
+                })
+                .catch(error => {
+                    headerResultsDiv.innerHTML = `
+                        <div class="error test-result">
+                            <strong>Error checking headers:</strong> ${error.message}<br>
+                            This might be due to CORS restrictions. Use external tools for accurate testing.
+                        </div>
+                    `;
+                });
+        }
+        
+        function openSecurityHeadersTest() {
+            const currentUrl = encodeURIComponent(window.location.origin);
+            window.open(`https://securityheaders.com/?q=${currentUrl}`, '_blank');
+        }
+        
+        function openMozillaObservatory() {
+            const currentUrl = encodeURIComponent(window.location.hostname);
+            window.open(`https://observatory.mozilla.org/analyze/${currentUrl}`, '_blank');
+        }
+        
+        // Auto-run check on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add a small delay to ensure page is fully loaded
+            setTimeout(checkHeaders, 1000);
+        });
+    </script>
+</body>
+</html>
