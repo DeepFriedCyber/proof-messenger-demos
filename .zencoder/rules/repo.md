@@ -8,6 +8,38 @@ alwaysApply: true
 ## Repository Summary
 Proof Messenger is a secure messaging system with cryptographic proofs, designed with a "self-hosted first" governance model. The system is split into multiple focused components for better maintainability and deployment, allowing enterprises to maintain control over their data and verification processes.
 
+## Strategic Priorities
+
+### Cryptographic Priorities
+- **Current State**: Ed25519 signatures are implemented and working well with excellent performance (~64 bytes with fast verification)
+- **Roadmap**: Implementing hybrid post-quantum cryptography with both Ed25519 and Dilithium signatures
+- **Implementation Phases**:
+  - Phase 1 (2-4 weeks): Create hybrid cryptography module structure
+  - Phase 2 (1-2 months): Implement feature flags and backward compatibility
+  - Phase 3 (3-6 months): Full hybrid implementation with opt-in capability
+
+### Performance Targets
+- **Current State**: 67.9 RPS with bottlenecks in database queries and message processing
+- **Optimization Goals**: Achieve 100+ RPS through connection pooling, message batching, and async processing
+- **Implementation Timeline**: 1-4 weeks for immediate and medium-term optimizations
+
+### IAM Prioritization
+- **Current State**: Okta integration completed and tested
+- **Roadmap**: Add Auth0 integration (2-3 weeks) and custom JWT issuers (3-4 weeks)
+- **Implementation Strategy**: Leverage existing JWT validation architecture with pluggable IAM connectors
+
+### Deployment Focus
+- **Current State**:
+  - Self-hosted Docker deployment is functional
+  - Kubernetes-ready with proper containerization
+  - No managed service offering yet
+- **Hybrid Deployment Strategy**:
+  - Immediate (1-2 weeks): Enhanced Helm chart for self-hosted deployments with configurable modes
+  - Medium-term (2-3 months): Implement tenant isolation, automated scaling policies, and operational tooling for both models
+- **Implementation Approach**: 
+  - Maintain self-hosted as primary deployment model
+  - Develop managed service option with strict tenant isolation
+
 ## Repository Structure
 The repository is organized as a Rust workspace with four main projects:
 
@@ -22,6 +54,7 @@ Additional directories include:
 - **performance-tests**: Load testing and performance benchmarking tools using Locust
 - **scripts**: Utility scripts for development and deployment
 - **.github**: CI/CD workflows
+- **shared files**: Common configuration and test utilities
 
 ## Projects
 
@@ -187,7 +220,7 @@ pip install -r requirements.txt
 python -m locust -f locustfile.py
 ```
 
-## Containerization
+## Containerization & Deployment
 
 The project includes comprehensive Docker support for all components:
 
@@ -203,10 +236,47 @@ The project includes comprehensive Docker support for all components:
 **Volumes**: Persistent storage for database, test results, and monitoring data
 **Deployment Profiles**: Production, development, and testing configurations
 
-**Run Command**:
+**Docker Run Command**:
 ```bash
 docker-compose up -d
 ```
+
+### Kubernetes Deployment
+
+The project supports Kubernetes deployment through Helm charts:
+
+**Helm Chart Configuration**: charts/proof-messenger/values.yaml
+```yaml
+deployment:
+  mode: "self-hosted"  # or "managed-service"
+  
+# Self-hosted specific
+persistence:
+  storageClass: "fast-ssd"
+  size: 100Gi
+  
+# Managed service specific
+multiTenancy:
+  enabled: false
+  tenantIsolation: "strict"
+```
+
+**Deployment Models**:
+- **Self-Hosted**: Primary deployment model with full customer control
+- **Managed Service**: Future option with multi-tenancy support (in development)
+
+**Kubernetes Resources**:
+- StatefulSets for relay servers with persistent storage
+- Deployments for web applications
+- Services and Ingress for network routing
+- ConfigMaps and Secrets for configuration management
+
+## Monitoring & Observability
+The repository includes a complete monitoring stack:
+- **Prometheus**: Metrics collection and storage
+- **Grafana**: Visualization and dashboards
+- **Custom Metrics**: Instrumentation in the relay server
+- **Health Checks**: Implemented across all containerized services
 
 ## Prerequisites
 - Rust 1.70+ 

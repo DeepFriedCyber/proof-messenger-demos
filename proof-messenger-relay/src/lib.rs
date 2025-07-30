@@ -9,6 +9,7 @@ pub mod auth_middleware;
 pub mod secure_logger;
 pub mod revocation;
 pub mod metrics;
+pub mod iam_connectors;
 
 use axum::{
     extract::{Json, Path, Query, State},
